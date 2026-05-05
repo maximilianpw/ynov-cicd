@@ -1,4 +1,4 @@
-Welcome to your new TanStack Start app! 
+Welcome to your new TanStack Start app!
 
 # Getting Started
 
@@ -25,6 +25,34 @@ This project uses [Vitest](https://vitest.dev/) for testing. You can run the tes
 bun --bun run test
 ```
 
+## Registration Exercise
+
+The home page contains a registration form with:
+
+- nom, prénom, email, date de naissance, ville and code postal fields
+- a save button disabled until every field is filled
+- red validation messages under invalid fields
+- a success status message after a valid save
+- a local list of saved registrations persisted in `localStorage`
+
+Validation is implemented in `src/lib/validators.js` and covered by unit tests.
+The React behavior is covered in `src/components/RegistrationForm.test.tsx`.
+
+Rules:
+
+- birth date must be 18 years old or older
+- postal code must contain exactly 5 digits
+- nom, prénom and ville accept letters, accents, spaces, apostrophes and hyphens
+- email must match a standard `name@domain.tld` shape
+
+Useful commands:
+
+```bash
+bun --bun run test
+bun --bun run coverage
+bun --bun run build
+```
+
 ## Styling
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
@@ -40,7 +68,6 @@ If you prefer not to use Tailwind CSS:
 
 ## Linting & Formatting
 
-
 This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
 
 ```bash
@@ -48,8 +75,6 @@ bun --bun run lint
 bun --bun run format
 bun --bun run check
 ```
-
-
 
 ## Routing
 
@@ -68,7 +93,7 @@ Now that you have two routes you can use a `Link` component to navigate between 
 To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
 
 ```tsx
-import { Link } from "@tanstack/react-router";
+import { Link } from '@tanstack/react-router'
 ```
 
 Then anywhere in your JSX you can use it like so:
@@ -136,11 +161,11 @@ const getServerTime = createServerFn({
 // Use in a component
 function MyComponent() {
   const [time, setTime] = useState('')
-  
+
   useEffect(() => {
     getServerTime().then(setTime)
   }, [])
-  
+
   return <div>Server time: {time}</div>
 }
 ```
