@@ -1,5 +1,9 @@
-import { useState } from 'react'
+import type {
+  IRegistrationForm,
+  IRegistrationFormErrors,
+} from '#/lib/registration-form.types.ts'
 import type { FormEvent } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { validateRegistration } from '../lib/validators.ts'
 import { Button } from './ui/button'
@@ -15,10 +19,6 @@ import {
   FieldSet,
 } from './ui/field'
 import { Input } from './ui/input'
-import type {
-  IRegistrationForm,
-  IRegistrationFormErrors,
-} from '#/lib/registration-form.types.ts'
 
 const emptyForm: IRegistrationForm = {
   name: '',
@@ -29,6 +29,9 @@ const emptyForm: IRegistrationForm = {
   codePostal: '',
 }
 
+/**
+ * Renders the student registration form and validates entries before saving.
+ */
 export function RegistrationForm() {
   const [values, setValues] = useState(emptyForm)
   const [errors, setErrors] = useState<IRegistrationFormErrors>({})

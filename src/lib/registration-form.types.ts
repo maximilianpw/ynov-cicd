@@ -1,3 +1,6 @@
+/**
+ * Values collected by the registration form.
+ */
 export interface IRegistrationForm {
   name: string
   prenom: string
@@ -7,6 +10,9 @@ export interface IRegistrationForm {
   codePostal: string
 }
 
+/**
+ * Validation messages keyed by the registration form field they describe.
+ */
 export interface IRegistrationFormErrors {
   name?: string
   prenom?: string

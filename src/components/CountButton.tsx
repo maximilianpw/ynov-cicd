@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Button } from './ui/button'
 
+/**
+ * Small interactive counter used on the home page to verify client-side state.
+ */
 export const CountButton = () => {
   const [count, setCount] = useState(0)
 

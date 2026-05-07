@@ -2,7 +2,7 @@
   "source": {
     "include": ["module.js", "src"],
     "includePattern": ".+\\.(js|jsx|mjs)$",
-    "exclude": ["node_modules", "dist", "coverage"]
+    "exclude": ["node_modules", "dist", "coverage", "src/components/ui"]
   },
   "opts": {
     "destination": "dist/client/docs",

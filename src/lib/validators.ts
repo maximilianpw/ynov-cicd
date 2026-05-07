@@ -7,6 +7,9 @@ const textPattern = /^[\p{L}]+(?:[ '-][\p{L}]+)*$/u
 const postalCodePattern = /^\d{5}$/
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/**
+ * Checks whether a birth date represents an adult on the provided reference date.
+ */
 function isAdult(birthDate: string, today = new Date()): boolean {
   const birth = new Date(birthDate)
 
@@ -39,6 +42,9 @@ function isValidEmail(value: string): boolean {
   return emailPattern.test(value.trim())
 }
 
+/**
+ * Validates every registration field and returns French error messages for invalid values.
+ */
 export function validateRegistration(
   values: IRegistrationForm,
   today = new Date(),

@@ -4,6 +4,9 @@ import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({ component: Home })
 
+/**
+ * Home route that hosts the demo counter and registration workflow.
+ */
 export function Home() {
   return (
     <div className="p-8 flex flex-col gap-4">
