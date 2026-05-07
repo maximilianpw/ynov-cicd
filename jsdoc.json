@@ -1,6 +1,11 @@
 {
   "source": {
-    "include": ["."],
-    "exclude": ["node_modules"]
+    "include": ["module.js", "src"],
+    "includePattern": ".+\\.(js|jsx|mjs)$",
+    "exclude": ["node_modules", "dist", "coverage"]
+  },
+  "opts": {
+    "destination": "dist/client/docs",
+    "recurse": true
   }
 }
