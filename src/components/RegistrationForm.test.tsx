@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
-import RegistrationForm from './RegistrationForm'
+import { RegistrationForm } from './RegistrationForm'
 import { STORAGE_KEY } from '../lib/validators'
 
 const validRegistration = {

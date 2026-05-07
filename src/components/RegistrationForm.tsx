@@ -28,7 +28,7 @@ const emptyForm: IRegistrationForm = {
   codePostal: "",
 };
 
-export default function RegistrationForm() {
+export function RegistrationForm() {
   const [values, setValues] = useState(emptyForm);
   const [errors, setErrors] = useState<IRegistrationFormErrors>({});
 
