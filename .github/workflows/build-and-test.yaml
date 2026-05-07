@@ -26,3 +26,25 @@ jobs:
           bun run test
         env:
           CI: true
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v3
+        with:
+          path: dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    needs: build_test
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
