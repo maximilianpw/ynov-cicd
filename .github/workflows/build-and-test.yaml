@@ -19,21 +19,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: 22
+          cache: pnpm
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: bun run build
+        run: pnpm run build
         env:
           CI: true
 
       - name: Test with coverage
-        run: bun run coverage
+        run: pnpm run coverage
         env:
           CI: true
 
@@ -44,7 +48,7 @@ jobs:
           fail_ci_if_error: true
 
       - name: Generate JSDoc docs
-        run: bun run docs
+        run: pnpm run docs
         env:
           CI: true
 
@@ -80,3 +84,16 @@ jobs:
       - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: build and publish package on NPM
+        run: |
+          git config --global user.email "mpinderwhite@proton.me"
+          git config --global user.name "Max PINDER-WHITE"
+          npm run build-npm
+          npm version patch
+          npm publish
+          git add .
+          git commit -m “updated version”
+          git push
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}

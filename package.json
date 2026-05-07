@@ -1,7 +1,19 @@
 {
-  "name": "vite-project",
-  "private": true,
+  "name": "ynov-cicd",
+  "version": "0.1.0",
+  "description": "ynov-cicd",
+  "private": false,
   "type": "module",
+  "main": "./module.js",
+  "exports": {
+    ".": "./module.js"
+  },
+  "files": [
+    "module.js",
+    "README.md"
+  ],
+  "license": "MIT",
+  "packageManager": "pnpm@10.28.0",
   "imports": {
     "#/*": "./src/*"
   },
@@ -9,6 +21,8 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "build": "vite build",
+    "build-npm-ci": "rm -rf dist && mkdir dist && NODE_ENV=production pnpm exec babel src --out-dir dist --copy-files",
+    "build-npm": "pnpm run build-npm-ci",
     "postbuild": "cp dist/client/index.html dist/client/404.html",
     "preview": "vite preview",
     "test": "vitest run",
@@ -17,7 +31,7 @@
     "docs": "jsdoc -c jsdoc.json",
     "format": "prettier --write . && eslint --fix",
     "check": "prettier --check .",
-    "predeploy": "npm run build && npm run docs",
+    "predeploy": "pnpm run build && pnpm run docs",
     "deploy": "gh-pages -d dist/client"
   },
   "dependencies": {
@@ -29,7 +43,7 @@
     "@tanstack/react-router": "latest",
     "@tanstack/react-router-devtools": "latest",
     "@tanstack/react-router-ssr-query": "latest",
-    "@tanstack/react-start": "latest",
+    "@tanstack/react-start": "^1.167.65",
     "@tanstack/router-plugin": "^1.132.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -48,6 +62,7 @@
     "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.29.7",
     "@babel/core": "^7.29.0",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
