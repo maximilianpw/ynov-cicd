@@ -29,12 +29,27 @@ const emptyForm: IRegistrationForm = {
   codePostal: '',
 }
 
+const registrationFields = Object.keys(emptyForm) as Array<keyof IRegistrationForm>
+
+const emptyTouchedFields = (): Partial<
+  Record<keyof IRegistrationForm, boolean>
+> => ({})
+
+const allTouchedFields = (): Record<keyof IRegistrationForm, boolean> =>
+  registrationFields.reduce(
+    (touchedFields, field) => ({ ...touchedFields, [field]: true }),
+    {} as Record<keyof IRegistrationForm, boolean>,
+  )
+
 /**
  * Renders the student registration form and validates entries before saving.
  */
 export function RegistrationForm() {
   const [values, setValues] = useState(emptyForm)
   const [errors, setErrors] = useState<IRegistrationFormErrors>({})
+  const [touched, setTouched] = useState<
+    Partial<Record<keyof IRegistrationForm, boolean>>
+  >(emptyTouchedFields)
 
   const updateField = (
     field: keyof IRegistrationForm,
@@ -43,25 +58,44 @@ export function RegistrationForm() {
     const nextValues = { ...values, [field]: value }
     setValues(nextValues)
 
-    if (errors[field]) {
+    if (touched[field]) {
       setErrors(validateRegistration(nextValues))
     }
   }
 
-  const validateField = () => {
+  const touchAndValidateField = (field: keyof IRegistrationForm) => {
+    setTouched((currentTouched) => ({ ...currentTouched, [field]: true }))
     setErrors(validateRegistration(values))
+  }
+
+  const selectBirthDate = (date: Date | undefined) => {
+    const nextValues = { ...values, dateNaissance: date?.toISOString() }
+
+    setValues(nextValues)
+    setTouched((currentTouched) => ({
+      ...currentTouched,
+      dateNaissance: true,
+    }))
+    setErrors(validateRegistration(nextValues))
+  }
+
+  const visibleError = (field: keyof IRegistrationForm) => {
+    return touched[field] ? errors[field] : undefined
   }
 
   const saveRegistration = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const nextErrors = validateRegistration(values)
     setErrors(nextErrors)
+    setTouched(allTouchedFields())
 
     if (Object.keys(nextErrors).length > 0) {
       return
     }
 
     setValues(emptyForm)
+    setErrors({})
+    setTouched(emptyTouchedFields())
     toast('Inscription sauvegardée avec succès.')
   }
 
@@ -83,10 +117,10 @@ export function RegistrationForm() {
                   name="name"
                   placeholder="PINDER-WHITE"
                   value={values.name}
-                  onBlur={validateField}
+                  onBlur={() => touchAndValidateField('name')}
                   onChange={(event) => updateField('name', event.target.value)}
                 />
-                <FieldError>{errors.name}</FieldError>
+                <FieldError>{visibleError('name')}</FieldError>
               </Field>
               <Field>
                 <FieldLabel htmlFor="prenom">Prénom</FieldLabel>
@@ -95,12 +129,12 @@ export function RegistrationForm() {
                   name="prenom"
                   placeholder="Maximilian"
                   value={values.prenom}
-                  onBlur={validateField}
+                  onBlur={() => touchAndValidateField('prenom')}
                   onChange={(event) =>
                     updateField('prenom', event.target.value)
                   }
                 />
-                <FieldError>{errors.prenom}</FieldError>
+                <FieldError>{visibleError('prenom')}</FieldError>
               </Field>
             </div>
 
@@ -112,10 +146,10 @@ export function RegistrationForm() {
                 type="email"
                 placeholder="max@ynov.com"
                 value={values.email}
-                onBlur={validateField}
+                onBlur={() => touchAndValidateField('email')}
                 onChange={(event) => updateField('email', event.target.value)}
               />
-              <FieldError>{errors.email}</FieldError>
+              <FieldError>{visibleError('email')}</FieldError>
             </Field>
 
             <Field>
@@ -124,12 +158,10 @@ export function RegistrationForm() {
                 className="max-w-[300px]"
                 mode="single"
                 selected={new Date(values.dateNaissance)}
-                onSelect={(date) =>
-                  updateField('dateNaissance', date?.toISOString())
-                }
+                onSelect={selectBirthDate}
                 captionLayout="dropdown"
               />
-              <FieldError>{errors.dateNaissance}</FieldError>
+              <FieldError>{visibleError('dateNaissance')}</FieldError>
             </Field>
 
             <div className="grid grid-cols-2 gap-4">
@@ -140,10 +172,10 @@ export function RegistrationForm() {
                   name="ville"
                   placeholder="Paris"
                   value={values.ville}
-                  onBlur={validateField}
+                  onBlur={() => touchAndValidateField('ville')}
                   onChange={(event) => updateField('ville', event.target.value)}
                 />
-                <FieldError>{errors.ville}</FieldError>
+                <FieldError>{visibleError('ville')}</FieldError>
               </Field>
               <Field>
                 <FieldLabel htmlFor="codePostal">Code postal</FieldLabel>
@@ -153,12 +185,12 @@ export function RegistrationForm() {
                   inputMode="numeric"
                   placeholder="75001"
                   value={values.codePostal}
-                  onBlur={validateField}
+                  onBlur={() => touchAndValidateField('codePostal')}
                   onChange={(event) =>
                     updateField('codePostal', event.target.value)
                   }
                 />
-                <FieldError>{errors.codePostal}</FieldError>
+                <FieldError>{visibleError('codePostal')}</FieldError>
               </Field>
             </div>
           </FieldGroup>

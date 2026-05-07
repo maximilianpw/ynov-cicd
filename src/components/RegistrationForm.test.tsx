@@ -64,6 +64,27 @@ describe('RegistrationForm', () => {
     expect(toast).not.toHaveBeenCalled()
   })
 
+  it('only shows errors for fields that have been touched', () => {
+    render(<RegistrationForm />)
+
+    fireEvent.blur(screen.getByLabelText(/^nom$/i))
+
+    expect(screen.getByText('Le nom est invalide.')).toBeInTheDocument()
+    expect(screen.queryByText('Le prénom est invalide.')).not.toBeInTheDocument()
+    expect(screen.queryByText("L'email est invalide.")).not.toBeInTheDocument()
+  })
+
+  it('refreshes validation errors when a touched field changes', () => {
+    render(<RegistrationForm />)
+
+    fireEvent.blur(screen.getByLabelText(/^nom$/i))
+    fireEvent.change(screen.getByLabelText(/^nom$/i), {
+      target: { value: 'Pinder-White' },
+    })
+
+    expect(screen.queryByText('Le nom est invalide.')).not.toBeInTheDocument()
+  })
+
   it('refreshes validation errors when a field with an error changes', () => {
     render(<RegistrationForm />)
 
