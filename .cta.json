@@ -2,7 +2,7 @@
   "projectName": "vite-project",
   "mode": "file-router",
   "typescript": true,
-  "packageManager": "bun",
+  "packageManager": "pnpm",
   "includeExamples": false,
   "tailwind": true,
   "addOnOptions": {},
