@@ -1,32 +1,32 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 
-import appCss from "../styles.css?url";
-import { ThemeProvider } from "#/components/providers/theme-provider";
-import { Toaster } from "#/components/ui/sonner";
+import appCss from '../styles.css?url'
+import { ThemeProvider } from '#/components/providers/theme-provider'
+import { Toaster } from '#/components/ui/sonner'
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
       {
-        charSet: "utf-8",
+        charSet: 'utf-8',
       },
       {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1",
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1',
       },
       {
-        title: "TanStack Start Starter",
+        title: 'TanStack Start Starter',
       },
     ],
     links: [
       {
-        rel: "stylesheet",
+        rel: 'stylesheet',
         href: appCss,
       },
     ],
   }),
   shellComponent: RootDocument,
-});
+})
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
@@ -42,5 +42,5 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }
