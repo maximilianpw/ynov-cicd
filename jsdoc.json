@@ -16,6 +16,7 @@
   },
   "opts": {
     "destination": "dist/client/docs",
+    "readme": "README.md",
     "recurse": true
   }
 }
