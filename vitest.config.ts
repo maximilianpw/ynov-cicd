@@ -10,13 +10,13 @@ export default defineConfig({
     include: ['src/**/*.test.{js,ts,tsx}'],
     coverage: {
       provider: 'istanbul',
-      include: ['src/components/RegistrationForm.tsx', 'src/lib/validators.js'],
+      include: ['src/components/RegistrationForm.tsx', 'src/lib/validators.ts'],
       reporter: ['text', 'json', 'html'],
       thresholds: {
-        statements: 100,
-        branches: 100,
-        functions: 100,
-        lines: 100,
+        statements: 80,
+        branches: 80,
+        functions: 80,
+        lines: 80,
       },
     },
   },

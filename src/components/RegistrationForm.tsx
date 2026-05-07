@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { toast } from 'sonner'
 import { validateRegistration } from '../lib/validators.ts'
 import { Button } from './ui/button'
@@ -48,10 +49,14 @@ export function RegistrationForm() {
     setErrors(validateRegistration(values))
   }
 
-  const saveRegistration = (event: any) => {
+  const saveRegistration = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const nextErrors = validateRegistration(values)
     setErrors(nextErrors)
+
+    if (Object.keys(nextErrors).length > 0) {
+      return
+    }
 
     setValues(emptyForm)
     toast('Inscription sauvegardée avec succès.')
