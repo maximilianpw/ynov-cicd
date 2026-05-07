@@ -3,8 +3,6 @@ import type {
   IRegistrationFormErrors,
 } from "./registration-form.types";
 
-export const STORAGE_KEY = "registrations";
-
 const textPattern = /^[\p{L}]+(?:[ '-][\p{L}]+)*$/u;
 const postalCodePattern = /^\d{5}$/;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
