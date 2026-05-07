@@ -9,6 +9,8 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
  * Checks whether a birth date represents an adult on the provided reference date.
+ *
+ * @private
  */
 function isAdult(birthDate: string, today = new Date()): boolean {
   const birth = new Date(birthDate)
@@ -44,6 +46,10 @@ function isValidEmail(value: string): boolean {
 
 /**
  * Validates every registration field and returns French error messages for invalid values.
+ *
+ * @param {IRegistrationForm} values - Registration values to validate.
+ * @param {Date} [today] - Reference date used for the adulthood check.
+ * @returns {IRegistrationFormErrors} Field-level validation messages.
  */
 export function validateRegistration(
   values: IRegistrationForm,
