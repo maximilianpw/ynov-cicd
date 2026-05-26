@@ -73,7 +73,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     permissions:
-      contents: read
+      contents: write
       pages: write
       id-token: write
 
@@ -85,15 +85,29 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v5
 
-      - name: build and publish package on NPM
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and publish package on NPM
         run: |
-          git config --global user.email "mpinderwhite@proton.me"
-          git config --global user.name "Max PINDER-WHITE"
-          npm run build-npm
-          npm version patch
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          pnpm run build-npm
+          npm version patch -m "chore: release %s [skip ci]"
           npm publish
-          git add .
-          git commit -m “updated version”
           git push
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
