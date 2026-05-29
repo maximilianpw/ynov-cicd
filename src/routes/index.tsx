@@ -9,7 +9,12 @@ export const Route = createFileRoute('/')({ component: Home })
 export function Home() {
   return (
     <div className="p-8 flex flex-col gap-4">
-      <h1 className="text-4xl font-bold">Inscriptions</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-4xl font-bold">Inscriptions</h1>
+        <a href="/documentation" className="underline">
+          Documentation
+        </a>
+      </div>
       <RegistrationForm />
     </div>
   )

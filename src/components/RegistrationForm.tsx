@@ -109,6 +109,7 @@ export function RegistrationForm() {
     setTouched(allTouchedFields())
 
     if (Object.keys(nextErrors).length > 0) {
+      toast.error('Le formulaire contient des erreurs.')
       return
     }
 

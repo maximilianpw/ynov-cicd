@@ -1,245 +1,94 @@
-Welcome to your new TanStack Start app!
+# Ynov CICD
 
-# Getting Started
-
-To run this application:
+## Lancer le projet
 
 ```bash
 pnpm install
 pnpm run dev
 ```
 
-# Building For Production
+L'application tourne ensuite en local sur le port affiché par Vite, généralement `http://localhost:3000`.
 
-To build this application for production:
-
-```bash
-pnpm run build
-```
-
-## Testing
-
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+## Commandes utiles
 
 ```bash
-pnpm run test
+pnpm run test      # lance les tests
+pnpm run coverage  # lance les tests avec couverture
+pnpm run build     # build de production
+pnpm run lint      # vérification ESLint
 ```
 
-## Registration Exercise
+La documentation est aussi accessible depuis l'application via le lien **Documentation** sur la page d'accueil.
 
-The home page contains a registration form with:
+## Structure rapide
 
-- nom, prénom, email, date de naissance, ville and code postal fields
-- a save button disabled until every field is filled
-- red validation messages under invalid fields
-- a success toaster after a valid save
-- form fields reset after a valid save
-- a local list of saved registrations
-- persistence in `localStorage` with invalid stored entries ignored
+- `src/lib/validators.ts` : fonctions de validation.
+- `src/components/RegistrationForm.tsx` : formulaire d'inscription.
+- `src/lib/registrations-storage.ts` : sauvegarde et lecture du local storage.
+- `src/routes/documentation.tsx` : documentation intégrée à l'app.
 
-Validation is implemented in `src/lib/validators.ts` and covered by unit
-tests. `src/lib/registrations-storage.ts` owns `localStorage` parsing and
-persistence. `src/components/RegisteredList.tsx` displays the saved
-registrations, while `src/components/RegistrationForm.tsx` owns the form state.
+## Énoncé
 
-Rules:
+Dans un framework js, faites un petit projet permettant à un utilisateur de s’enregistrer sur un formulaire avec nom, prénom, mail, date de naissance, ville, code postal et un bouton de sauvegarde.
 
-- birth date must be 18 years old or older
-- postal code must contain exactly 5 digits
-- nom, prénom and ville accept letters, accents, spaces, apostrophes and hyphens
-- email must match a standard `name@domain.tld` shape
+Le bouton est non clickable tant que les champs précédents ne sont pas remplis.
 
-Minimum test coverage included:
+Si les champs sont valides, on sauvegarde dans le local storage et on affiche un toaster de succès, puis on vide les champs.
 
-- age calculation and adult age boundary
-- French postal code format
-- nom, prénom and ville formats with accents, spaces, apostrophes and hyphens
-- email format
-- `localStorage` validation and persistence
-- disabled save button while fields are missing
-- success toaster, field reset and saved-registration list
-- red field-level validation errors
+Si les champs ne sont pas valides, on affiche un toaster d’erreur, et on écrit un message d’erreur sous chaque champ en erreur, en rouge
 
-Useful commands:
+Les règles de validation :
 
-```bash
-pnpm run test
-pnpm run coverage
-pnpm run build
-pnpm run lint
-```
+La date de naissance bloque les -18 ans,
 
-## Styling
+Le code postal doit être au format français,
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+Les noms, prénoms doivent être valides (sans caractère spéciaux et chiffres mais accepter les accents, tréma, tiret, etc),
 
-### Removing Tailwind CSS
+L’email doit être valide
 
-If you prefer not to use Tailwind CSS:
+Les fonctions de vérification sont dans un fichier js à part qui sera totalement testé. Les composants également. La couverture attendue est de 100% (index.js et reportWebVitals exclus), exportée dans code coverage avec tous les tests unitaires et d’intégrations passant avec succès. Une documentation complète à fournir. La fiabilité des tests sera prise en compte.
 
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `pnpm remove @tailwindcss/vite tailwindcss`
+Les tests à avoir au minimum :
 
-## Linting & Formatting
+Le calcul de l'âge
 
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
+L'âge > 18 ans
 
-```bash
-pnpm run lint
-pnpm run format
-pnpm run check
-```
+Le format du code postal
 
-## Routing
+Le format des noms et prénoms (avec différents cas particulier)
 
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
+Le format de l’email
 
-### Adding A Route
+La désactivation du bouton si les champs ne sont pas remplis
 
-To add a new route to your application just add a new file in the `./src/routes` directory.
+La sauvegarde dans le local storage et le toaster de succès, avec champs vidés
 
-TanStack will automatically generate the content of the route file for you.
+Le toaster d’erreur et les erreurs correspondantes en rouge
 
-Now that you have two routes you can use a `Link` component to navigate between them.
+Projet à mettre sur github, en ajoutant au gitignore les node_modules, le dossier de couverture et le dossier de docs.
 
-### Adding Links
+Le projet doit être déployé avec github action sur github pages, les tests UT et IT doivent être en succès avant le déploiement sur npm et sur github pages.
 
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
+Votre historique de package npm et de commit doit justifier d'avoir publié automatiquement une version patch et une minor. Potentiellement une major si vous en aviez besoin
 
-```tsx
-import { Link } from '@tanstack/react-router'
-```
+Le rendu attendue est un fichier txt avec :
 
-Then anywhere in your JSX you can use it like so:
+lien du repository github public
 
-```tsx
-<Link to="/about">About</Link>
-```
+lien du projet déployé sur github pages
 
-This will create a link that will navigate to the `/about` route.
+lien vers le package npm public
 
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
+lien vers le rapport de couverture codecov public
 
-### Using A Layout
+Notation individuelle :
 
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
+Tests UT (qualité, fiabilité, couverture) / 5
 
-Here is an example layout that includes a header:
+Tests IT (qualité, fiabilité, couverture) / 5
 
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+Documentation avec readme, accessible depuis l’app lancé, et couverture sur codecov / 5
 
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+Workflow github fonctionnel avec testing, déploiement sur npm et sur github pages / 5

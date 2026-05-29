@@ -4,8 +4,16 @@ import { toast } from 'sonner'
 import { registrationsStorageKey } from '#/lib/registrations-storage'
 import { RegistrationForm } from './RegistrationForm'
 
+const { toastMock } = vi.hoisted(() => {
+  const mockedToast = vi.fn() as ReturnType<typeof vi.fn> & {
+    error: ReturnType<typeof vi.fn>
+  }
+  mockedToast.error = vi.fn()
+  return { toastMock: mockedToast }
+})
+
 vi.mock('sonner', () => ({
-  toast: vi.fn(),
+  toast: toastMock,
 }))
 
 vi.mock('./ui/calendar.tsx', () => ({
@@ -148,6 +156,9 @@ describe('RegistrationForm', () => {
       screen.getByText('Le code postal doit contenir 5 chiffres.'),
     ).toBeInTheDocument()
     expect(screen.getByText('Aucun inscrit.')).toBeInTheDocument()
+    expect(toast.error).toHaveBeenCalledWith(
+      'Le formulaire contient des erreurs.',
+    )
     expect(toast).not.toHaveBeenCalled()
   })
 
