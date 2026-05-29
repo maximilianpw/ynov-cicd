@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { validateRegistration } from './validators'
+import {
+  calculateAge,
+  isAdult,
+  isValidEmail,
+  isValidPostalCode,
+  isValidText,
+  validateRegistration,
+} from './validators'
 import type { IRegistrationForm } from './registration-form.types'
 
 const validRegistration: IRegistrationForm = {
@@ -16,6 +23,48 @@ const today = new Date('2026-05-07T12:00:00.000Z')
 function validate(overrides: Partial<IRegistrationForm> = {}) {
   return validateRegistration({ ...validRegistration, ...overrides }, today)
 }
+
+describe('calculateAge', () => {
+  it('calculates a full age', () => {
+    expect(calculateAge('2000-04-12', today)).toBe(26)
+    expect(calculateAge('2000-05-08', today)).toBe(25)
+  })
+
+  it('returns null for invalid birth dates', () => {
+    expect(calculateAge('not-a-date', today)).toBeNull()
+  })
+})
+
+describe('isAdult', () => {
+  it('accepts users older than 18 years old', () => {
+    expect(isAdult('2000-05-08', today)).toBe(true)
+  })
+
+  it('rejects invalid dates and users younger than 18 years old', () => {
+    expect(isAdult('2008-05-08', today)).toBe(false)
+  })
+})
+
+describe('field format validators', () => {
+  it('validates French postal codes', () => {
+    expect(isValidPostalCode('75001')).toBe(true)
+    expect(isValidPostalCode('7500')).toBe(false)
+    expect(isValidPostalCode('7500A')).toBe(false)
+  })
+
+  it('validates names and cities with French text cases', () => {
+    expect(isValidText("L'Écuyer-Martin")).toBe(true)
+    expect(isValidText('Anne Marie')).toBe(true)
+    expect(isValidText('Saint-Étienne')).toBe(true)
+    expect(isValidText('Dupont2')).toBe(false)
+    expect(isValidText('Paris!')).toBe(false)
+  })
+
+  it('validates emails', () => {
+    expect(isValidEmail('max.pinder-white@example.com')).toBe(true)
+    expect(isValidEmail('elise.dupont.example.com')).toBe(false)
+  })
+})
 
 describe('validateRegistration', () => {
   it('returns no errors for a valid registration', () => {

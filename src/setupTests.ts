@@ -15,7 +15,9 @@ const localStorageMock = {
   },
 }
 
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-  configurable: true,
-})
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'localStorage', {
+    value: localStorageMock,
+    configurable: true,
+  })
+}

@@ -8,39 +8,36 @@ const postalCodePattern = /^\d{5}$/
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
- * Checks whether a birth date represents an adult on the provided reference date.
- *
- * @private
+ * Calculates an age in full years from a birth date.
  */
-function isAdult(birthDate: string, today = new Date()): boolean {
+export function calculateAge(birthDate: string, today: Date) {
   const birth = new Date(birthDate)
 
   if (Number.isNaN(birth.getTime())) {
-    return false
+    return null
   }
 
-  let age = today.getFullYear() - birth.getFullYear()
-  const birthdayPassed =
-    today.getMonth() > birth.getMonth() ||
-    (today.getMonth() === birth.getMonth() &&
-      today.getDate() >= birth.getDate())
+  const age = today.getFullYear() - birth.getFullYear()
+  const birthMonthDay = (birth.getMonth() + 1) * 100 + birth.getDate()
+  const todayMonthDay = (today.getMonth() + 1) * 100 + today.getDate()
 
-  if (!birthdayPassed) {
-    age -= 1
-  }
-
-  return age >= 18
+  return todayMonthDay >= birthMonthDay ? age : age - 1
 }
 
-function isValidPostalCode(value: string): boolean {
+export function isAdult(birthDate: string, today: Date): boolean {
+  const age = calculateAge(birthDate, today)
+  return age !== null && age >= 18
+}
+
+export function isValidPostalCode(value: string): boolean {
   return postalCodePattern.test(value.trim())
 }
 
-function isValidText(value: string): boolean {
+export function isValidText(value: string): boolean {
   return textPattern.test(value.trim())
 }
 
-function isValidEmail(value: string): boolean {
+export function isValidEmail(value: string): boolean {
   return emailPattern.test(value.trim())
 }
 
