@@ -15,6 +15,13 @@ export default [
     },
   },
   {
-    ignores: ['eslint.config.js', 'prettier.config.js', 'src/components/ui/**'],
+    ignores: [
+      'eslint.config.js',
+      'prettier.config.js',
+      'module.js',
+      'module.test.js',
+      'src/components/ui/**',
+      'src/lib/registration-form.docs.js',
+    ],
   },
 ]

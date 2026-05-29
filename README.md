@@ -32,11 +32,15 @@ The home page contains a registration form with:
 - nom, prénom, email, date de naissance, ville and code postal fields
 - a save button disabled until every field is filled
 - red validation messages under invalid fields
-- a success status message after a valid save
-- a local list of saved registrations persisted in `localStorage`
+- a success toaster after a valid save
+- form fields reset after a valid save
+- a local list of saved registrations
+- persistence in `localStorage` with invalid stored entries ignored
 
-Validation is implemented in `src/lib/validators.js` and covered by unit tests.
-The React behavior is covered in `src/components/RegistrationForm.test.tsx`.
+Validation is implemented in `src/lib/validators.ts` and covered by unit
+tests. `src/lib/registrations-storage.ts` owns `localStorage` parsing and
+persistence. `src/components/RegisteredList.tsx` displays the saved
+registrations, while `src/components/RegistrationForm.tsx` owns the form state.
 
 Rules:
 
@@ -45,12 +49,24 @@ Rules:
 - nom, prénom and ville accept letters, accents, spaces, apostrophes and hyphens
 - email must match a standard `name@domain.tld` shape
 
+Minimum test coverage included:
+
+- age calculation and adult age boundary
+- French postal code format
+- nom, prénom and ville formats with accents, spaces, apostrophes and hyphens
+- email format
+- `localStorage` validation and persistence
+- disabled save button while fields are missing
+- success toaster, field reset and saved-registration list
+- red field-level validation errors
+
 Useful commands:
 
 ```bash
 pnpm run test
 pnpm run coverage
 pnpm run build
+pnpm run lint
 ```
 
 ## Styling
