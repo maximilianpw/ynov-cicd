@@ -21,7 +21,6 @@ export default [
       'module.js',
       'module.test.js',
       'src/components/ui/**',
-      'src/lib/registration-form.docs.js',
     ],
   },
 ]
