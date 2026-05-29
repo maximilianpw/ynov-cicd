@@ -1,0 +1,11 @@
+Lien du repository GitHub public :
+https://github.com/maximilianpw/ynov-cicd
+
+Lien du projet déployé sur GitHub Pages :
+https://maximilianpw.github.io/ynov-cicd
+
+Lien vers le package npm public :
+https://www.npmjs.com/package/ynov-cicd
+
+Lien vers le rapport de couverture Codecov public :
+https://codecov.io/gh/maximilianpw/ynov-cicd

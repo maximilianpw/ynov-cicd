@@ -9,6 +9,7 @@ import {
   loadRegistrations,
   saveRegistrations,
 } from '../lib/registrations-storage.ts'
+import { fetchUsers } from '../lib/users-api.ts'
 import { validateRegistration } from '../lib/validators.ts'
 import { RegisteredList } from './RegisteredList.tsx'
 import { Button } from './ui/button'
@@ -55,7 +56,7 @@ export function RegistrationForm() {
   const [values, setValues] = useState(emptyForm)
   const [errors, setErrors] = useState<IRegistrationFormErrors>({})
   const [registrations, setRegistrations] = useState<Array<IRegistrationForm>>(
-    [],
+    () => (typeof window === 'undefined' ? [] : loadRegistrations()),
   )
   const [touched, setTouched] =
     useState<Partial<Record<keyof IRegistrationForm, boolean>>>(
@@ -67,7 +68,23 @@ export function RegistrationForm() {
   )
 
   useEffect(() => {
-    setRegistrations(loadRegistrations())
+    let cancelled = false
+
+    // Start with localStorage so saved registrations are visible immediately,
+    // then replace them with backend data when the API is reachable.
+    fetchUsers()
+      .then((users) => {
+        if (!cancelled) {
+          setRegistrations(users)
+        }
+      })
+      .catch(() => {
+        // Keep the localStorage-backed initial state when the backend is offline.
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const updateField = (field: keyof IRegistrationForm, value: string) => {
