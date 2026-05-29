@@ -3,9 +3,14 @@ import type {
   IRegistrationFormErrors,
 } from '#/lib/registration-form.types.ts'
 import type { FormEvent } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import {
+  loadRegistrations,
+  saveRegistrations,
+} from '../lib/registrations-storage.ts'
 import { validateRegistration } from '../lib/validators.ts'
+import { RegisteredList } from './RegisteredList.tsx'
 import { Button } from './ui/button'
 import { Calendar } from './ui/calendar.tsx'
 import { Card } from './ui/card'
@@ -29,7 +34,9 @@ const emptyForm: IRegistrationForm = {
   codePostal: '',
 }
 
-const registrationFields = Object.keys(emptyForm) as Array<keyof IRegistrationForm>
+const registrationFields = Object.keys(emptyForm) as Array<
+  keyof IRegistrationForm
+>
 
 const emptyTouchedFields = (): Partial<
   Record<keyof IRegistrationForm, boolean>
@@ -47,14 +54,23 @@ const allTouchedFields = (): Record<keyof IRegistrationForm, boolean> =>
 export function RegistrationForm() {
   const [values, setValues] = useState(emptyForm)
   const [errors, setErrors] = useState<IRegistrationFormErrors>({})
-  const [touched, setTouched] = useState<
-    Partial<Record<keyof IRegistrationForm, boolean>>
-  >(emptyTouchedFields)
+  const [registrations, setRegistrations] = useState<Array<IRegistrationForm>>(
+    [],
+  )
+  const [touched, setTouched] =
+    useState<Partial<Record<keyof IRegistrationForm, boolean>>>(
+      emptyTouchedFields,
+    )
 
-  const updateField = (
-    field: keyof IRegistrationForm,
-    value: string | undefined,
-  ) => {
+  const allRequiredFieldsFilled = registrationFields.every(
+    (field) => values[field].trim().length > 0,
+  )
+
+  useEffect(() => {
+    setRegistrations(loadRegistrations())
+  }, [])
+
+  const updateField = (field: keyof IRegistrationForm, value: string) => {
     const nextValues = { ...values, [field]: value }
     setValues(nextValues)
 
@@ -69,7 +85,10 @@ export function RegistrationForm() {
   }
 
   const selectBirthDate = (date: Date | undefined) => {
-    const nextValues = { ...values, dateNaissance: date?.toISOString() }
+    const nextValues = {
+      ...values,
+      dateNaissance: date ? date.toISOString() : '',
+    }
 
     setValues(nextValues)
     setTouched((currentTouched) => ({
@@ -93,6 +112,9 @@ export function RegistrationForm() {
       return
     }
 
+    const nextRegistrations = [...registrations, { ...values }]
+    setRegistrations(nextRegistrations)
+    saveRegistrations(nextRegistrations)
     setValues(emptyForm)
     setErrors({})
     setTouched(emptyTouchedFields())
@@ -157,7 +179,11 @@ export function RegistrationForm() {
               <Calendar
                 className="max-w-[300px]"
                 mode="single"
-                selected={new Date(values.dateNaissance)}
+                selected={
+                  values.dateNaissance
+                    ? new Date(values.dateNaissance)
+                    : undefined
+                }
                 onSelect={selectBirthDate}
                 captionLayout="dropdown"
               />
@@ -196,10 +222,14 @@ export function RegistrationForm() {
           </FieldGroup>
 
           <Field orientation="horizontal">
-            <Button type="submit">Sauvegarder</Button>
+            <Button type="submit" disabled={!allRequiredFieldsFilled}>
+              Sauvegarder
+            </Button>
           </Field>
         </FieldSet>
       </form>
+
+      <RegisteredList registrations={registrations} />
     </Card>
   )
 }
