@@ -1,6 +1,6 @@
 {
   "name": "ynov-cicd",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "ynov-cicd",
   "private": false,
   "type": "module",
