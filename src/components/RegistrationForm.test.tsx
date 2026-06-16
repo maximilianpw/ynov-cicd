@@ -31,7 +31,7 @@ vi.mock('./ui/calendar.tsx', () => ({
       >
         Choose underage birth date
       </button>
-      <button type="button" onClick={() => onSelect?.(undefined)}>
+      <button type="button" onClick={() => onSelect?.()}>
         Clear birth date
       </button>
     </div>
