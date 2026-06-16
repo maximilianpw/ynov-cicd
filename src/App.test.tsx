@@ -1,6 +1,10 @@
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { Home } from './routes'
+
+vi.mock('./lib/users-api.ts', () => ({
+  fetchUsers: vi.fn(() => Promise.resolve([])),
+}))
 
 describe('Vitest + React Testing Library', () => {
   it('renders the home page and registration form', () => {

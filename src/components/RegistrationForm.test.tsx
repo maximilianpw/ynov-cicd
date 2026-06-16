@@ -1,19 +1,27 @@
+import type { IRegistrationForm } from '#/lib/registration-form.types'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { toast } from 'sonner'
 import { registrationsStorageKey } from '#/lib/registrations-storage'
 import { RegistrationForm } from './RegistrationForm'
 
-const { toastMock } = vi.hoisted(() => {
+const { fetchUsersMock, toastMock } = vi.hoisted(() => {
   const mockedToast = vi.fn() as ReturnType<typeof vi.fn> & {
     error: ReturnType<typeof vi.fn>
   }
   mockedToast.error = vi.fn()
-  return { toastMock: mockedToast }
+  return {
+    fetchUsersMock: vi.fn<() => Promise<Array<IRegistrationForm>>>(),
+    toastMock: mockedToast,
+  }
 })
 
 vi.mock('sonner', () => ({
   toast: toastMock,
+}))
+
+vi.mock('../lib/users-api.ts', () => ({
+  fetchUsers: fetchUsersMock,
 }))
 
 vi.mock('./ui/calendar.tsx', () => ({
@@ -56,7 +64,35 @@ function fillValidTextFields() {
   })
 }
 
+function createRegistration(
+  overrides: Partial<IRegistrationForm> = {},
+): IRegistrationForm {
+  return {
+    name: 'Pinder-White',
+    prenom: 'Max',
+    email: 'max.pinder-white@example.com',
+    dateNaissance: '1998-04-12T00:00:00.000Z',
+    ville: 'Lyon',
+    codePostal: '69001',
+    ...overrides,
+  }
+}
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((promiseResolve) => {
+    resolve = promiseResolve
+  })
+
+  return { promise, resolve }
+}
+
 describe('RegistrationForm', () => {
+  beforeEach(() => {
+    fetchUsersMock.mockReset()
+    fetchUsersMock.mockRejectedValue(new Error('Backend offline'))
+  })
+
   afterEach(() => {
     vi.clearAllMocks()
     window.localStorage.clear()
@@ -239,5 +275,47 @@ describe('RegistrationForm', () => {
 
     expect(await screen.findByText('Élise Dupont')).toBeInTheDocument()
     expect(screen.getByText('elise.dupont@example.fr')).toBeInTheDocument()
+  })
+
+  it('replaces local registrations with backend registrations when the API responds', async () => {
+    localStorage.setItem(
+      registrationsStorageKey,
+      JSON.stringify([
+        createRegistration({
+          name: 'Local',
+          prenom: 'Saved',
+          email: 'saved.local@example.fr',
+        }),
+      ]),
+    )
+    fetchUsersMock.mockResolvedValueOnce([
+      createRegistration({
+        name: 'Martin',
+        prenom: 'Alice',
+        email: 'alice.martin@example.fr',
+        dateNaissance: '1996-08-24T00:00:00.000Z',
+        ville: 'Nantes',
+        codePostal: '44000',
+      }),
+    ])
+
+    render(<RegistrationForm />)
+
+    expect(screen.getByText('Saved Local')).toBeInTheDocument()
+    expect(await screen.findByText('Alice Martin')).toBeInTheDocument()
+    expect(screen.queryByText('Saved Local')).not.toBeInTheDocument()
+    expect(screen.getByText('alice.martin@example.fr')).toBeInTheDocument()
+  })
+
+  it('skips backend registration updates after unmounting', async () => {
+    const request = createDeferred<Array<IRegistrationForm>>()
+    fetchUsersMock.mockReturnValueOnce(request.promise)
+    const { unmount } = render(<RegistrationForm />)
+
+    unmount()
+    request.resolve([createRegistration()])
+    await request.promise
+
+    expect(fetchUsersMock).toHaveBeenCalledTimes(1)
   })
 })
