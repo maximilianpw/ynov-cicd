@@ -56,7 +56,7 @@ export function RegistrationForm() {
   const [values, setValues] = useState(emptyForm)
   const [errors, setErrors] = useState<IRegistrationFormErrors>({})
   const [registrations, setRegistrations] = useState<Array<IRegistrationForm>>(
-    () => (typeof window === 'undefined' ? [] : loadRegistrations()),
+    [],
   )
   const [touched, setTouched] =
     useState<Partial<Record<keyof IRegistrationForm, boolean>>>(
@@ -66,12 +66,15 @@ export function RegistrationForm() {
   const allRequiredFieldsFilled = registrationFields.every(
     (field) => values[field].trim().length > 0,
   )
+  const currentYear = new Date().getFullYear()
 
   useEffect(() => {
     let cancelled = false
 
-    // Start with localStorage so saved registrations are visible immediately,
+    // Load localStorage after hydration so server and client initial renders match,
     // then replace them with backend data when the API is reachable.
+    setRegistrations(loadRegistrations())
+
     fetchUsers()
       .then((users) => {
         if (!cancelled) {
@@ -204,6 +207,8 @@ export function RegistrationForm() {
                 }
                 onSelect={selectBirthDate}
                 captionLayout="dropdown"
+                startMonth={new Date(currentYear - 120, 0)}
+                endMonth={new Date(currentYear, 11)}
               />
               <FieldError>{visibleError('dateNaissance')}</FieldError>
             </Field>

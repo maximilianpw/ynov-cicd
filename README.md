@@ -14,6 +14,7 @@ L'application tourne ensuite en local sur le port affiché par Vite, généralem
 ```bash
 pnpm run test      # lance les tests
 pnpm run coverage  # lance les tests avec couverture
+pnpm run cy:run    # lance les tests end-to-end Cypress
 pnpm run build     # build de production
 pnpm run lint      # vérification ESLint
 ```

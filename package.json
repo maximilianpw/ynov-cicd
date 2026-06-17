@@ -27,6 +27,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
     "lint": "eslint",
     "docs": "jsdoc -c jsdoc.json",
     "format": "prettier --write . && eslint --fix",
