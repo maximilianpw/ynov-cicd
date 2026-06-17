@@ -51,10 +51,13 @@ jobs:
         env:
           CI: true
 
+      - name: Install Cypress binary
+        run: pnpm exec cypress install
+
       - name: Cypress tests
         uses: cypress-io/github-action@v6
         with:
-          install-command: pnpm install --frozen-lockfile && pnpm exec cypress install
+          install: false
           start: pnpm run dev
           wait-on: http://localhost:3000/ynov-cicd/
           wait-on-timeout: 120
