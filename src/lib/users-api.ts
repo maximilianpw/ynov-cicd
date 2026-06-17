@@ -1,3 +1,4 @@
+import axios from 'axios'
 import type { IRegistrationForm } from './registration-form.types'
 
 const apiBaseUrl =
@@ -33,20 +34,22 @@ interface UsersResponse {
 export async function fetchUsers(
   baseUrl = apiBaseUrl,
 ): Promise<Array<IRegistrationForm>> {
-  const response = await fetch(`${baseUrl}/users`)
+  try {
+    const { data } = await axios.get<UsersResponse>(`${baseUrl}/users`)
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch users: ${response.status}`)
+    return data.utilisateurs.map((row) => ({
+      name: row[1],
+      prenom: row[2],
+      email: row[3],
+      dateNaissance: row[4],
+      ville: row[5],
+      codePostal: row[6],
+    }))
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(`Failed to fetch users: ${error.response.status}`)
+    }
+
+    throw error
   }
-
-  const data = (await response.json()) as UsersResponse
-
-  return data.utilisateurs.map((row) => ({
-    name: row[1],
-    prenom: row[2],
-    email: row[3],
-    dateNaissance: row[4],
-    ville: row[5],
-    codePostal: row[6],
-  }))
 }
