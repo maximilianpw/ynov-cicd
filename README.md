@@ -25,8 +25,8 @@ d'environnement.
 
 Identifiants admin par defaut :
 
-- email : `loise.fenoll@ynov.com`
-- mot de passe : `PvdrTAzTeR247sDnAZBr`
+- email : `admin@example.com`
+- mot de passe : `AdminPassword123!`
 
 ## Variables d'environnement
 
@@ -38,8 +38,8 @@ MYSQL_DATABASE=ynov-cicd
 MYSQL_USER=root
 MYSQL_HOST=db
 MYSQL_PORT=3306
-ADMIN_EMAIL=loise.fenoll@ynov.com
-ADMIN_PASSWORD=PvdrTAzTeR247sDnAZBr
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=AdminPassword123!
 VITE_API_URL=http://localhost:8000
 CORS_ORIGINS=*
 REACT_PORT=3000
@@ -47,8 +47,13 @@ REACT_PORT=3000
 
 Production :
 
-- Cote Vercel backend : `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DATABASE`,
-  `MYSQL_USER`, `MYSQL_PASSWORD`, `CORS_ORIGINS`.
+- Cote Vercel backend avec Aiven MySQL :
+  - `MYSQL_HOST=mysql-298328f0-proton-1e70.j.aivencloud.com`
+  - `MYSQL_PORT=22462`
+  - `MYSQL_DATABASE=defaultdb`
+  - `MYSQL_USER=avnadmin`
+  - `MYSQL_PASSWORD` doit contenir le mot de passe Aiven.
+- Cote Vercel backend : `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CORS_ORIGINS`.
 - Cote GitHub Actions : `VITE_API_URL` doit pointer vers l'API Vercel.
 - Deploiement Vercel : `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
 - Optionnel : `CODECOV_TOKEN`.

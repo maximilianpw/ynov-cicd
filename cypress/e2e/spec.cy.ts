@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 
-const adminEmail = 'loise.fenoll@ynov.com'
-const adminPassword = 'PvdrTAzTeR247sDnAZBr'
+const adminEmail = 'admin@example.com'
+const adminPassword = 'AdminPassword123!'
 
 function fillRegistrationFields(email: string) {
   cy.get('#name').clear().type('Pinder-White')

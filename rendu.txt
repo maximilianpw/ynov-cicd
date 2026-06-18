@@ -8,7 +8,7 @@ Lien de l'API backend déployée sur Vercel :
 À compléter après configuration des secrets Vercel et déploiement GitHub Actions.
 
 Hébergement MySQL de production :
-À compléter avec l'instance Aiven ou Alwaysdata.
+Aiven MySQL : mysql-298328f0-proton-1e70.j.aivencloud.com:22462/defaultdb
 
 Lien vers le rapport de couverture Codecov public :
 https://codecov.io/gh/maximilianpw/ynov-cicd

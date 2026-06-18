@@ -213,7 +213,7 @@ jobs:
         run: |
           missing=false
 
-          for secret_name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+          for secret_name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID MYSQL_HOST MYSQL_PORT MYSQL_DATABASE MYSQL_USER MYSQL_PASSWORD; do
             if [ -z "$(eval "printf '%s' \"\${${secret_name}}\"")" ]; then
               echo "::notice::Set the ${secret_name} repository secret to enable backend deployment."
               missing=true
@@ -230,6 +230,11 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+          MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
 
       - name: Pull Vercel project settings
         if: steps.backend-deploy-config.outputs.enabled == 'true'
@@ -241,8 +246,21 @@ jobs:
 
       - name: Deploy backend to Vercel
         if: steps.backend-deploy-config.outputs.enabled == 'true'
-        run: npx --yes vercel@latest deploy --prod --token="${VERCEL_TOKEN}"
+        run: |
+          npx --yes vercel@latest deploy --prod --token="${VERCEL_TOKEN}" \
+            --env MYSQL_HOST="${MYSQL_HOST}" \
+            --env MYSQL_PORT="${MYSQL_PORT}" \
+            --env MYSQL_DATABASE="${MYSQL_DATABASE}" \
+            --env MYSQL_USER="${MYSQL_USER}" \
+            --env MYSQL_PASSWORD="${MYSQL_PASSWORD}" \
+            --env CORS_ORIGINS="${CORS_ORIGINS}"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+          MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          CORS_ORIGINS: ${{ secrets.CORS_ORIGINS || '*' }}
