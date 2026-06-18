@@ -6,22 +6,12 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      release_type:
-        description: NPM semantic version bump to publish
-        required: true
-        default: patch
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
 
 permissions:
   contents: read
 
 jobs:
-  build_test:
+  frontend-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -41,46 +31,24 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
+      - name: Build frontend
         run: pnpm run build
         env:
           CI: true
 
-      - name: Test with coverage
+      - name: Frontend unit and integration tests with coverage
         run: pnpm run coverage
         env:
           CI: true
 
-      - name: Install Cypress binary
-        run: pnpm exec cypress install
-
-      - name: Cypress tests
-        uses: cypress-io/github-action@v6
-        with:
-          install: false
-          start: pnpm run dev
-          wait-on: http://localhost:3000/ynov-cicd/
-          wait-on-timeout: 120
-          command: pnpm run cy:run
-
       - name: Upload coverage to Codecov
+        if: github.event_name != 'pull_request'
         uses: codecov/codecov-action@v5
+        continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
 
-      - name: Generate JSDoc docs
-        run: pnpm run docs
-        env:
-          CI: true
-
-      - name: Upload Pages artifact
-        if: github.event_name == 'push'
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: ./dist/client
-
-  test-docker:
+  backend-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -88,62 +56,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Start Docker Compose
-        run: docker compose up -d --build
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-      - name: List containers
-        run: docker ps
+      - name: Install backend dependencies
+        run: python -m pip install -r requirements.txt -r requirements-dev.txt
 
-      - name: Wait for healthy services
-        shell: bash
-        run: |
-          services=(db adminer server react)
-          timeout_seconds=180
-          started_at="$(date +%s)"
+      - name: Backend integration tests
+        run: python -m pytest server
 
-          for service in "${services[@]}"; do
-            container_id="$(docker compose ps -q "$service")"
-
-            if [ -z "$container_id" ]; then
-              echo "::error::Container for service $service was not created"
-              docker compose ps
-              exit 1
-            fi
-
-            echo "Waiting for $service to become healthy..."
-
-            while true; do
-              is_healthy="$(docker inspect --format '{{json .State.Health.Status}}' "$container_id" | jq -r '. == "healthy"')"
-
-              if [ "$is_healthy" = "true" ]; then
-                echo "$service is healthy"
-                break
-              fi
-
-              now="$(date +%s)"
-              elapsed="$((now - started_at))"
-
-              if [ "$elapsed" -ge "$timeout_seconds" ]; then
-                status="$(docker inspect --format '{{json .State.Health.Status}}' "$container_id" | jq -r '.')"
-                echo "::error::Timed out waiting for $service to become healthy. Last status: $status"
-                docker compose ps
-                docker logs "$container_id"
-                exit 1
-              fi
-
-              sleep 5
-            done
-          done
-
-      - name: Stop Docker Compose
-        if: always()
-        run: docker compose down -v
-
-  build-docker:
-    if: github.event_name != 'pull_request'
-    needs:
-      - build_test
-      - test-docker
+  docker-infra:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -151,27 +75,56 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Docker Hub login
-        uses: docker/login-action@v3
-        with:
-          username: maxpw777
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Docker infrastructure tests
+        run: sh scripts/test-infrastructure.sh
 
-      - name: Build and push frontend image
-        run: |
-          docker build -t maxpw777/frontend -f Dockerfile .
-          docker push maxpw777/frontend
-
-      - name: Build and push backend image
-        run: |
-          docker build -t maxpw777/backend -f server/Dockerfile .
-          docker push maxpw777/backend
-
-  deploy:
-    if: github.event_name == 'push'
-    needs: build_test
+  e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Cypress binary
+        run: pnpm exec cypress install
+
+      - name: Start Docker Compose
+        run: |
+          docker compose down -v
+          docker compose up -d --build
+
+      - name: Wait for Docker services
+        run: sh scripts/wait-for-compose.sh
+
+      - name: Cypress end-to-end tests
+        run: pnpm run cy:run
+
+      - name: Stop Docker Compose
+        if: always()
+        run: docker compose down -v
+
+  deploy-frontend:
+    if: github.event_name == 'push'
+    needs:
+      - frontend-tests
+      - backend-tests
+      - docker-infra
+      - e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     concurrency:
       group: github-pages
@@ -182,18 +135,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     permissions:
-      contents: write
+      contents: read
       pages: write
       id-token: write
 
     steps:
-      - name: Configure Pages
-        uses: actions/configure-pages@v6
-
-      - name: Deploy Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -205,19 +151,85 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build and publish package on NPM
+      - name: Check frontend production API URL
         run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          pnpm run build-npm
-          npm version "$RELEASE_TYPE" -m "chore: release %s [skip ci]"
-          npm publish
-          git push
+          if [ -z "${VITE_API_URL}" ]; then
+            echo "::error::Set the VITE_API_URL repository secret to the deployed Vercel API URL."
+            exit 1
+          fi
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
-          RELEASE_TYPE: ${{ github.event.inputs.release_type || 'patch' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: Build frontend for GitHub Pages
+        run: pnpm run build
+        env:
+          CI: true
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: ./dist/client
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+  deploy-backend:
+    if: github.event_name == 'push'
+    needs:
+      - frontend-tests
+      - backend-tests
+      - docker-infra
+      - e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check Vercel secrets
+        run: |
+          missing=false
+
+          for secret_name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "$(eval "printf '%s' \"\${${secret_name}}\"")" ]; then
+              echo "::error::Set the ${secret_name} repository secret for backend deployment."
+              missing=true
+            fi
+          done
+
+          if [ "${missing}" = "true" ]; then
+            exit 1
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Pull Vercel project settings
+        run: npx --yes vercel@latest pull --yes --environment=production --token="${VERCEL_TOKEN}"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy backend to Vercel
+        run: npx --yes vercel@latest deploy --prod --token="${VERCEL_TOKEN}"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
