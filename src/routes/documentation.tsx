@@ -56,8 +56,8 @@ export function Documentation() {
       <p>
         L'administrateur est insere au premier demarrage MySQL depuis les
         variables <code>ADMIN_EMAIL</code> et <code>ADMIN_PASSWORD</code>. Les
-        valeurs locales par defaut sont <code>admin@example.com</code> et{' '}
-        <code>AdminPassword123!</code>.
+        valeurs locales par defaut sont <code>loise.fenoll@ynov.com</code> et{' '}
+        <code>PvdrTAzTeR247sDnAZBr</code>.
       </p>
 
       <h2>API</h2>

@@ -25,8 +25,8 @@ d'environnement.
 
 Identifiants admin par defaut :
 
-- email : `admin@example.com`
-- mot de passe : `AdminPassword123!`
+- email : `loise.fenoll@ynov.com`
+- mot de passe : `PvdrTAzTeR247sDnAZBr`
 
 ## Variables d'environnement
 
@@ -38,8 +38,8 @@ MYSQL_DATABASE=ynov-cicd
 MYSQL_USER=root
 MYSQL_HOST=db
 MYSQL_PORT=3306
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=AdminPassword123!
+ADMIN_EMAIL=loise.fenoll@ynov.com
+ADMIN_PASSWORD=PvdrTAzTeR247sDnAZBr
 VITE_API_URL=http://localhost:8000
 CORS_ORIGINS=*
 REACT_PORT=3000

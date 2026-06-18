@@ -78,10 +78,10 @@ function fillValidTextFields() {
 
 function fillAdminCredentials() {
   fireEvent.change(screen.getByLabelText(/email admin/i), {
-    target: { value: 'admin@example.com' },
+    target: { value: 'loise.fenoll@ynov.com' },
   })
   fireEvent.change(screen.getByLabelText(/mot de passe admin/i), {
-    target: { value: 'AdminPassword123!' },
+    target: { value: 'PvdrTAzTeR247sDnAZBr' },
   })
 }
 
@@ -419,8 +419,8 @@ describe('RegistrationForm', () => {
 
     await waitFor(() => {
       expect(fetchPrivateUserMock).toHaveBeenCalledWith(4, {
-        email: 'admin@example.com',
-        password: 'AdminPassword123!',
+        email: 'loise.fenoll@ynov.com',
+        password: 'PvdrTAzTeR247sDnAZBr',
       })
     })
     expect(screen.getByText('Nantes')).toBeInTheDocument()
@@ -456,8 +456,8 @@ describe('RegistrationForm', () => {
 
     await waitFor(() => {
       expect(deleteUserMock).toHaveBeenCalledWith(6, {
-        email: 'admin@example.com',
-        password: 'AdminPassword123!',
+        email: 'loise.fenoll@ynov.com',
+        password: 'PvdrTAzTeR247sDnAZBr',
       })
     })
     expect(screen.queryByText('Max Pinder-White')).not.toBeInTheDocument()

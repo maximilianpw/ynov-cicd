@@ -3,7 +3,7 @@ set -eu
 
 root_password="${MYSQL_ROOT_PASSWORD:-passwd}"
 database="${MYSQL_DATABASE:-ynov-cicd}"
-admin_email="${ADMIN_EMAIL:-admin@example.com}"
+admin_email="${ADMIN_EMAIL:-loise.fenoll@ynov.com}"
 react_port="${REACT_PORT:-3000}"
 
 cleanup() {

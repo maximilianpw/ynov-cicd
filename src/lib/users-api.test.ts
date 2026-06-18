@@ -33,8 +33,8 @@ const registration: IRegistrationForm = {
 }
 
 const adminCredentials: AdminCredentials = {
-  email: 'admin@example.com',
-  password: 'AdminPassword123!',
+  email: 'loise.fenoll@ynov.com',
+  password: 'PvdrTAzTeR247sDnAZBr',
 }
 
 const adminHeaders = {
