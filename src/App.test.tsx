@@ -3,6 +3,9 @@ import { describe, expect, it, vi } from 'vitest'
 import { Home } from './routes'
 
 vi.mock('./lib/users-api.ts', () => ({
+  createUser: vi.fn(),
+  deleteUser: vi.fn(),
+  fetchPrivateUser: vi.fn(),
   fetchUsers: vi.fn(() => Promise.resolve([])),
 }))
 

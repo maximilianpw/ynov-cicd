@@ -13,7 +13,6 @@ export default defineConfig({
       include: [
         'src/components/RegisteredList.tsx',
         'src/components/RegistrationForm.tsx',
-        'src/lib/registrations-storage.ts',
         'src/lib/validators.ts',
         'src/routes/index.tsx',
       ],

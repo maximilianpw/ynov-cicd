@@ -5,11 +5,17 @@ import type {
 import type { FormEvent } from 'react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import type {
+  AdminCredentials,
+  PrivateUser,
+  RegisteredUser,
+} from '../lib/users-api.ts'
 import {
-  loadRegistrations,
-  saveRegistrations,
-} from '../lib/registrations-storage.ts'
-import { fetchUsers } from '../lib/users-api.ts'
+  createUser,
+  deleteUser,
+  fetchPrivateUser,
+  fetchUsers,
+} from '../lib/users-api.ts'
 import { validateRegistration } from '../lib/validators.ts'
 import { RegisteredList } from './RegisteredList.tsx'
 import { Button } from './ui/button'
@@ -55,9 +61,16 @@ const allTouchedFields = (): Record<keyof IRegistrationForm, boolean> =>
 export function RegistrationForm() {
   const [values, setValues] = useState(emptyForm)
   const [errors, setErrors] = useState<IRegistrationFormErrors>({})
-  const [registrations, setRegistrations] = useState<Array<IRegistrationForm>>(
-    [],
-  )
+  const [registrations, setRegistrations] = useState<Array<RegisteredUser>>([])
+  const [privateUsers, setPrivateUsers] = useState<
+    Partial<Record<number, PrivateUser>>
+  >({})
+  const [adminCredentials, setAdminCredentials] = useState<AdminCredentials>({
+    email: '',
+    password: '',
+  })
+  const [isSaving, setIsSaving] = useState(false)
+  const [busyUserId, setBusyUserId] = useState<number | undefined>()
   const [touched, setTouched] =
     useState<Partial<Record<keyof IRegistrationForm, boolean>>>(
       emptyTouchedFields,
@@ -71,10 +84,6 @@ export function RegistrationForm() {
   useEffect(() => {
     let cancelled = false
 
-    // Load localStorage after hydration so server and client initial renders match,
-    // then replace them with backend data when the API is reachable.
-    setRegistrations(loadRegistrations())
-
     fetchUsers()
       .then((users) => {
         if (!cancelled) {
@@ -82,7 +91,9 @@ export function RegistrationForm() {
         }
       })
       .catch(() => {
-        // Keep the localStorage-backed initial state when the backend is offline.
+        if (!cancelled) {
+          toast.error("Impossible de charger les inscrits depuis l'API.")
+        }
       })
 
     return () => {
@@ -122,7 +133,17 @@ export function RegistrationForm() {
     return touched[field] ? errors[field] : undefined
   }
 
-  const saveRegistration = (event: FormEvent<HTMLFormElement>) => {
+  const updateAdminCredentials = (
+    field: keyof AdminCredentials,
+    value: string,
+  ) => {
+    setAdminCredentials((currentCredentials) => ({
+      ...currentCredentials,
+      [field]: value,
+    }))
+  }
+
+  const saveRegistration = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const nextErrors = validateRegistration(values)
     setErrors(nextErrors)
@@ -133,13 +154,62 @@ export function RegistrationForm() {
       return
     }
 
-    const nextRegistrations = [...registrations, { ...values }]
-    setRegistrations(nextRegistrations)
-    saveRegistrations(nextRegistrations)
-    setValues(emptyForm)
-    setErrors({})
-    setTouched(emptyTouchedFields())
-    toast('Inscription sauvegardée avec succès.')
+    setIsSaving(true)
+
+    try {
+      const createdUser = await createUser(values)
+      setRegistrations((currentRegistrations) => [
+        ...currentRegistrations,
+        createdUser,
+      ])
+      setValues(emptyForm)
+      setErrors({})
+      setTouched(emptyTouchedFields())
+      toast('Inscription sauvegardée avec succès.')
+    } catch {
+      toast.error("L'inscription n'a pas pu être sauvegardée en base.")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const viewPrivateUser = async (user: RegisteredUser) => {
+    setBusyUserId(user.id)
+
+    try {
+      const privateUser = await fetchPrivateUser(user.id, adminCredentials)
+      setPrivateUsers((currentPrivateUsers) => ({
+        ...currentPrivateUsers,
+        [user.id]: privateUser,
+      }))
+    } catch {
+      toast.error('Accès admin refusé ou utilisateur introuvable.')
+    } finally {
+      setBusyUserId(undefined)
+    }
+  }
+
+  const removeUser = async (user: RegisteredUser) => {
+    setBusyUserId(user.id)
+
+    try {
+      await deleteUser(user.id, adminCredentials)
+      setRegistrations((currentRegistrations) =>
+        currentRegistrations.filter(
+          (registration) => registration.id !== user.id,
+        ),
+      )
+      setPrivateUsers((currentPrivateUsers) => {
+        const nextPrivateUsers = { ...currentPrivateUsers }
+        delete nextPrivateUsers[user.id]
+        return nextPrivateUsers
+      })
+      toast('Inscrit supprimé.')
+    } catch {
+      toast.error('Suppression admin refusée ou utilisateur introuvable.')
+    } finally {
+      setBusyUserId(undefined)
+    }
   }
 
   return (
@@ -245,14 +315,25 @@ export function RegistrationForm() {
           </FieldGroup>
 
           <Field orientation="horizontal">
-            <Button type="submit" disabled={!allRequiredFieldsFilled}>
-              Sauvegarder
+            <Button
+              type="submit"
+              disabled={!allRequiredFieldsFilled || isSaving}
+            >
+              {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
             </Button>
           </Field>
         </FieldSet>
       </form>
 
-      <RegisteredList registrations={registrations} />
+      <RegisteredList
+        registrations={registrations}
+        adminCredentials={adminCredentials}
+        privateUsers={privateUsers}
+        busyUserId={busyUserId}
+        onAdminCredentialsChange={updateAdminCredentials}
+        onViewPrivateUser={viewPrivateUser}
+        onDeleteUser={removeUser}
+      />
     </Card>
   )
 }
