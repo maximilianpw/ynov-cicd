@@ -156,29 +156,36 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Check frontend production API URL
+        id: frontend-deploy-config
         run: |
           if [ -z "${VITE_API_URL}" ]; then
-            echo "::error::Set the VITE_API_URL repository secret to the deployed Vercel API URL."
-            exit 1
+            echo "::notice::Skipping GitHub Pages deploy because VITE_API_URL is not configured. Set the VITE_API_URL repository secret to enable frontend deployment."
+            echo "enabled=false" >> "${GITHUB_OUTPUT}"
+          else
+            echo "enabled=true" >> "${GITHUB_OUTPUT}"
           fi
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
       - name: Build frontend for GitHub Pages
+        if: steps.frontend-deploy-config.outputs.enabled == 'true'
         run: pnpm run build
         env:
           CI: true
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
       - name: Upload Pages artifact
+        if: steps.frontend-deploy-config.outputs.enabled == 'true'
         uses: actions/upload-pages-artifact@v5
         with:
           path: ./dist/client
 
       - name: Configure Pages
+        if: steps.frontend-deploy-config.outputs.enabled == 'true'
         uses: actions/configure-pages@v6
 
       - name: Deploy Pages
+        if: steps.frontend-deploy-config.outputs.enabled == 'true'
         id: deployment
         uses: actions/deploy-pages@v5
 
@@ -202,18 +209,22 @@ jobs:
           node-version: 22
 
       - name: Check Vercel secrets
+        id: backend-deploy-config
         run: |
           missing=false
 
           for secret_name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
             if [ -z "$(eval "printf '%s' \"\${${secret_name}}\"")" ]; then
-              echo "::error::Set the ${secret_name} repository secret for backend deployment."
+              echo "::notice::Set the ${secret_name} repository secret to enable backend deployment."
               missing=true
             fi
           done
 
           if [ "${missing}" = "true" ]; then
-            exit 1
+            echo "::notice::Skipping Vercel deploy because required Vercel secrets are not configured."
+            echo "enabled=false" >> "${GITHUB_OUTPUT}"
+          else
+            echo "enabled=true" >> "${GITHUB_OUTPUT}"
           fi
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -221,6 +232,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Pull Vercel project settings
+        if: steps.backend-deploy-config.outputs.enabled == 'true'
         run: npx --yes vercel@latest pull --yes --environment=production --token="${VERCEL_TOKEN}"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -228,6 +240,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Deploy backend to Vercel
+        if: steps.backend-deploy-config.outputs.enabled == 'true'
         run: npx --yes vercel@latest deploy --prod --token="${VERCEL_TOKEN}"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
