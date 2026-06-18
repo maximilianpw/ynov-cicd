@@ -1,3 +1,4 @@
+import { appHref } from '#/lib/app-href'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/documentation')({
@@ -10,7 +11,7 @@ export const Route = createFileRoute('/documentation')({
 export function Documentation() {
   return (
     <main className="prose prose-invert max-w-4xl p-8">
-      <a href="/" className="not-prose text-sm underline">
+      <a href={appHref()} className="not-prose text-sm underline">
         Retour au formulaire
       </a>
 

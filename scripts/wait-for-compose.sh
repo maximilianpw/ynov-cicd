@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-services="${COMPOSE_SERVICES:-db adminer server react}"
+services="${COMPOSE_SERVICES:-db adminer backend react}"
 timeout_seconds="${COMPOSE_HEALTH_TIMEOUT:-180}"
 started_at="$(date +%s)"
 

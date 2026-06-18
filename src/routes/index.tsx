@@ -1,4 +1,5 @@
 import { RegistrationForm } from '#/components/RegistrationForm'
+import { appHref } from '#/lib/app-href'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({ component: Home })
@@ -11,7 +12,7 @@ export function Home() {
     <div className="p-8 flex flex-col gap-4">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-4xl font-bold">Inscriptions</h1>
-        <a href="/documentation" className="underline">
+        <a href={appHref('documentation')} className="underline">
           Documentation
         </a>
       </div>

@@ -110,7 +110,16 @@ jobs:
         run: sh scripts/wait-for-compose.sh
 
       - name: Cypress end-to-end tests
-        run: pnpm run cy:run
+        uses: cypress-io/github-action@v6
+        with:
+          install: false
+          command: pnpm run cy:run
+
+      - name: Cypress offline test with mocked API
+        uses: cypress-io/github-action@v6
+        with:
+          install: false
+          command: pnpm run cy:offline
 
       - name: Stop Docker Compose
         if: always()

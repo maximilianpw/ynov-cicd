@@ -43,7 +43,7 @@ describe('registration app', () => {
   it('saves a registration in MySQL, shows private data to admin, then deletes it', () => {
     const email = `max.pinder-white.${Date.now()}@example.com`
 
-    cy.visit('/')
+    cy.visit('/ynov-cicd/')
     cy.contains('h1', 'Inscriptions').should('be.visible')
     cy.contains('legend', 'Informations personnelles').should('be.visible')
 

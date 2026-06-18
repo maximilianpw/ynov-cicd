@@ -12,7 +12,7 @@ docker compose up --build
 Services locaux :
 
 - React : `http://localhost:3000/ynov-cicd/`
-- API FastAPI : `http://localhost:8000`
+- API FastAPI (`backend`) : `http://localhost:8000`
 - Adminer : `http://localhost:8081`
 - MySQL : `localhost:3306`
 
@@ -113,12 +113,24 @@ pnpm run cy:run
 docker compose down -v
 ```
 
+Test Cypress du mode backend hors ligne :
+
+```bash
+docker compose up -d --build
+sh scripts/wait-for-compose.sh
+pnpm run cy:offline
+docker compose down -v
+```
+
+Le mode hors ligne Cypress est active par `CYPRESS_OFFLINE=true` dans le script
+`cy:offline`; le test mocke les routes API au lieu de couper le backend.
+
 Avec un port React alternatif :
 
 ```bash
 REACT_PORT=3100 docker compose up -d --build
 sh scripts/wait-for-compose.sh
-CYPRESS_BASE_URL=http://localhost:3100/ynov-cicd/ pnpm run cy:run
+CYPRESS_BASE_URL=http://localhost:3100 pnpm run cy:run
 docker compose down -v
 ```
 
