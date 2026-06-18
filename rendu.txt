@@ -5,7 +5,7 @@ Lien du projet déployé sur GitHub Pages :
 https://maximilianpw.github.io/ynov-cicd
 
 Lien de l'API backend déployée sur Vercel :
-À compléter après configuration des secrets Vercel et déploiement GitHub Actions.
+https://ynov-cicd.vercel.app
 
 Hébergement MySQL de production :
 Aiven MySQL : mysql-298328f0-proton-1e70.j.aivencloud.com:22462/defaultdb
