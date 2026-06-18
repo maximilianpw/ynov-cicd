@@ -26,6 +26,8 @@
     "postbuild": "cp dist/client/index.html dist/client/404.html",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:backend": "python -m pytest server",
+    "test:infra": "sh scripts/test-infrastructure.sh",
     "coverage": "vitest run --coverage",
     "cy:open": "cypress open",
     "cy:run": "cypress run",

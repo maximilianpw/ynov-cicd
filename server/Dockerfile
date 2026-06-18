@@ -1,4 +1,12 @@
-FROM python:3.9
-WORKDIR /server
-RUN pip install mysql-connector-python fastapi uvicorn
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY server ./server
+
 EXPOSE 8000
+
+CMD ["uvicorn", "server.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "8000"]

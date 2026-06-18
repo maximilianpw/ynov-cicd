@@ -20,6 +20,7 @@ export default [
       'prettier.config.js',
       'module.js',
       'module.test.js',
+      '.venv/**',
       'src/components/ui/**',
     ],
   },
