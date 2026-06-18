@@ -5,82 +5,98 @@ export const Route = createFileRoute('/documentation')({
 })
 
 /**
- * Page de documentation intégrée pour l'exercice d'inscription.
+ * Page de documentation integree pour l'exercice d'inscription.
  */
 export function Documentation() {
   return (
     <main className="prose prose-invert max-w-4xl p-8">
       <a href="/" className="not-prose text-sm underline">
-        ← Retour au formulaire
+        Retour au formulaire
       </a>
 
       <h1>Documentation du projet</h1>
 
-      <h2>Fonctionnalités</h2>
+      <h2>Fonctionnalites</h2>
       <ul>
         <li>
-          Formulaire d’inscription avec nom, prénom, email, date de
-          naissance, ville et code postal.
+          Formulaire d'inscription avec nom, prenom, email, date de naissance,
+          ville et code postal.
         </li>
         <li>
-          Bouton de sauvegarde désactivé tant que tous les champs ne sont pas
+          Bouton de sauvegarde desactive tant que tous les champs ne sont pas
           remplis.
         </li>
-        <li>Validation complète avant sauvegarde.</li>
-        <li>Sauvegarde des inscriptions valides dans le localStorage.</li>
+        <li>Validation complete avant sauvegarde.</li>
+        <li>Sauvegarde des inscriptions valides dans MySQL via FastAPI.</li>
+        <li>Liste publique avec informations reduites : prenom, nom, email.</li>
         <li>
-          Toaster de succès après sauvegarde et toaster d’erreur si le
-          formulaire est invalide.
+          Compte admin permettant de voir les informations privees et de
+          supprimer un inscrit.
         </li>
-        <li>Messages d’erreur rouges sous chaque champ invalide.</li>
       </ul>
 
-      <h2>Règles de validation</h2>
-      <ul>
-        <li>Date de naissance : l’utilisateur doit avoir au moins 18 ans.</li>
-        <li>Code postal : exactement 5 chiffres au format français.</li>
-        <li>
-          Nom, prénom et ville : lettres, accents, espaces, apostrophes et
-          tirets autorisés.
-        </li>
-        <li>Email : format email standard requis.</li>
-      </ul>
-
-      <h2>Architecture</h2>
+      <h2>Architecture Docker</h2>
       <ul>
         <li>
-          <code>src/lib/validators.ts</code> contient les fonctions pures de
-          validation.
+          <code>db</code> : MySQL avec migrations dans <code>migrations/</code>.
         </li>
         <li>
-          <code>src/lib/registrations-storage.ts</code> gère la lecture et
-          l’écriture localStorage.
+          <code>adminer</code> : interface d'administration MySQL sur le port
+          8081.
         </li>
         <li>
-          <code>src/components/RegistrationForm.tsx</code> contient l’état du
-          formulaire et la soumission.
+          <code>server</code> : API Python FastAPI sur le port 8000.
         </li>
         <li>
-          <code>src/components/RegisteredList.tsx</code> affiche les
-          inscriptions sauvegardées.
+          <code>react</code> : build Vite servi par nginx sur le port 3000.
         </li>
       </ul>
 
-      <h2>Tests et qualité</h2>
+      <h2>Administrateur</h2>
       <p>
-        Les tests unitaires et d’intégration sont exécutés avec Vitest et React
-        Testing Library. La couverture est configurée à 100% sur les fichiers
-        applicatifs importants.
+        L'administrateur est insere au premier demarrage MySQL depuis les
+        variables <code>ADMIN_EMAIL</code> et <code>ADMIN_PASSWORD</code>. Les
+        valeurs locales par defaut sont <code>loise.fenoll@ynov.com</code> et{' '}
+        <code>PvdrTAzTeR247sDnAZBr</code>.
       </p>
+
+      <h2>API</h2>
+      <ul>
+        <li>
+          <code>GET /health</code> verifie l'API et la base.
+        </li>
+        <li>
+          <code>GET /users</code> retourne la liste publique.
+        </li>
+        <li>
+          <code>POST /users</code> cree une inscription.
+        </li>
+        <li>
+          <code>GET /admin/users/:id</code> retourne les donnees privees avec
+          Basic Auth admin.
+        </li>
+        <li>
+          <code>DELETE /admin/users/:id</code> supprime un inscrit avec Basic
+          Auth admin.
+        </li>
+      </ul>
+
+      <h2>Tests et qualite</h2>
       <pre>
-        <code>pnpm run test{`\n`}pnpm run coverage{`\n`}pnpm run build</code>
+        <code>
+          pnpm run coverage{`\n`}
+          python -m pytest server{`\n`}
+          pnpm run test:infra{`\n`}
+          pnpm run cy:run
+        </code>
       </pre>
 
       <h2>CI/CD</h2>
       <p>
-        Le workflow GitHub Actions construit le projet, exécute les tests avec
-        couverture, publie le rapport Codecov, génère la documentation, déploie
-        GitHub Pages et publie le package npm après succès des tests.
+        GitHub Actions construit le front, lance les tests frontend avec
+        couverture, lance les tests backend, demarre Docker pour les tests
+        d'infrastructure, lance Cypress, deploie le front sur GitHub Pages et
+        deploie l'API sur Vercel.
       </p>
     </main>
   )
