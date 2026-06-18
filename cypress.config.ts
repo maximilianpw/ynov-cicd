@@ -4,6 +4,6 @@ export default defineConfig({
   allowCypressEnv: false,
 
   e2e: {
-    baseUrl: 'http://localhost:3000/ynov-cicd',
+    baseUrl: process.env.CYPRESS_BASE_URL ?? 'http://localhost:3000/ynov-cicd/',
   },
 })

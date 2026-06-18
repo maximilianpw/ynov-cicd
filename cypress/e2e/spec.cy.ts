@@ -1,74 +1,19 @@
 /// <reference types="cypress" />
 
-const registrationsStorageKey = 'ynov-cicd.registrations'
+const adminEmail = 'loise.fenoll@ynov.com'
+const adminPassword = 'PvdrTAzTeR247sDnAZBr'
 
-type Registration = {
-  name: string
-  prenom: string
-  email: string
-  dateNaissance: string
-  ville: string
-  codePostal: string
+function fillRegistrationFields(email: string) {
+  cy.get('#name').clear().type('Pinder-White')
+  cy.get('#prenom').clear().type('Max')
+  cy.get('#email').clear().type(email)
+  cy.get('#ville').clear().type('Lyon')
+  cy.get('#codePostal').clear().type('69001')
 }
 
-const existingRegistration: Registration = {
-  name: 'Dupont',
-  prenom: 'Élise',
-  email: 'elise.dupont@example.fr',
-  dateNaissance: '1997-02-01T00:00:00.000Z',
-  ville: 'Bordeaux',
-  codePostal: '33000',
-}
-
-function visitHome({
-  clearStorage = false,
-  registrations,
-}: {
-  clearStorage?: boolean
-  registrations?: Array<Registration>
-} = {}) {
-  cy.intercept('GET', '**/users', {
-    statusCode: 500,
-    body: {},
-  }).as('getUsers')
-
-  cy.visit('/', {
-    onBeforeLoad(window) {
-      if (clearStorage) {
-        window.localStorage.clear()
-      }
-
-      if (registrations) {
-        window.localStorage.setItem(
-          registrationsStorageKey,
-          JSON.stringify(registrations),
-        )
-      }
-    },
-  })
-
-  cy.wait('@getUsers')
-}
-
-function fillRegistrationFields(
-  overrides: Partial<
-    Record<'name' | 'prenom' | 'email' | 'ville' | 'codePostal', string>
-  > = {},
-) {
-  const values = {
-    name: 'Pinder-White',
-    prenom: 'Max',
-    email: 'max.pinder-white@example.com',
-    ville: 'Lyon',
-    codePostal: '69001',
-    ...overrides,
-  }
-
-  cy.get('#name').clear().type(values.name)
-  cy.get('#prenom').clear().type(values.prenom)
-  cy.get('#email').clear().type(values.email)
-  cy.get('#ville').clear().type(values.ville)
-  cy.get('#codePostal').clear().type(values.codePostal)
+function fillAdminCredentials() {
+  cy.get('#admin-email').clear().type(adminEmail)
+  cy.get('#admin-password').clear().type(adminPassword)
 }
 
 function selectCalendarYear(year: string) {
@@ -94,70 +39,33 @@ function selectVisibleDay(day: string) {
   cy.contains('[data-slot="calendar"] button', new RegExp(`^${day}$`)).click()
 }
 
-function assertRegisteredCount(count: number) {
-  if (count === 0) {
-    cy.contains('Aucun inscrit.').should('be.visible')
-    cy.get('section[aria-labelledby="registered-list-title"] li').should(
-      'not.exist',
-    )
-    return
-  }
-
-  cy.get('section[aria-labelledby="registered-list-title"] li').should(
-    'have.length',
-    count,
-  )
-}
-
 describe('registration app', () => {
-  it('navigue vers la page sans inscrit, ajoute un utilisateur valide, puis revient avec un inscrit', () => {
-    visitHome({ clearStorage: true })
+  it('saves a registration in MySQL, shows private data to admin, then deletes it', () => {
+    const email = `max.pinder-white.${Date.now()}@example.com`
 
+    cy.visit('/')
     cy.contains('h1', 'Inscriptions').should('be.visible')
-    assertRegisteredCount(0)
     cy.contains('legend', 'Informations personnelles').should('be.visible')
 
-    fillRegistrationFields()
+    fillRegistrationFields(email)
     selectCalendarYear('1998')
     selectVisibleDay('12')
     cy.contains('button', 'Sauvegarder').click()
 
     cy.contains('Inscription sauvegardée avec succès.').should('be.visible')
-
-    visitHome()
-
-    assertRegisteredCount(1)
     cy.contains('Max Pinder-White').should('be.visible')
-    cy.contains('max.pinder-white@example.com').should('be.visible')
-  })
+    cy.contains(email).should('be.visible')
+    cy.contains('69001 Lyon').should('not.exist')
 
-  it('navigue vers la page avec un inscrit, tente un ajout invalide, puis revient avec toujours un inscrit', () => {
-    visitHome({
-      clearStorage: true,
-      registrations: [existingRegistration],
+    fillAdminCredentials()
+    cy.contains('li', email).within(() => {
+      cy.contains('button', 'Voir privé').click()
+      cy.contains('Lyon').should('be.visible')
+      cy.contains('69001').should('be.visible')
+      cy.contains('button', 'Supprimer').click()
     })
 
-    cy.contains('h1', 'Inscriptions').should('be.visible')
-    assertRegisteredCount(1)
-    cy.contains('Élise Dupont').should('be.visible')
-    cy.contains('legend', 'Informations personnelles').should('be.visible')
-
-    fillRegistrationFields({
-      name: 'Pinder2',
-      prenom: 'Max!',
-      email: 'max.pinder-white.example.com',
-      ville: 'Lyon3',
-      codePostal: '6900A',
-    })
-    selectVisibleDay('12')
-    cy.contains('button', 'Sauvegarder').click()
-
-    cy.contains('Le formulaire contient des erreurs.').should('be.visible')
-
-    visitHome()
-
-    assertRegisteredCount(1)
-    cy.contains('Élise Dupont').should('be.visible')
-    cy.contains('Max Pinder-White').should('not.exist')
+    cy.contains('Inscrit supprimé.').should('be.visible')
+    cy.contains(email).should('not.exist')
   })
 })
