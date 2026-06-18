@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
 
-admin_email="${ADMIN_EMAIL:-loise.fenoll@ynov.com}"
-admin_password="${ADMIN_PASSWORD:-PvdrTAzTeR247sDnAZBr}"
+admin_email="${ADMIN_EMAIL:?ADMIN_EMAIL is required}"
+admin_password="${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}"
 database="${MYSQL_DATABASE:-ynov-cicd}"
 escaped_admin_email="$(printf "%s" "${admin_email}" | sed "s/'/''/g")"
 escaped_admin_password="$(printf "%s" "${admin_password}" | sed "s/'/''/g")"

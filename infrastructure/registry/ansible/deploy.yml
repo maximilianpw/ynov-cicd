@@ -1,0 +1,132 @@
+---
+- name: Deploy a secure Docker registry behind Nginx
+  hosts: registry
+  become: true
+  gather_facts: true
+
+  vars:
+    public_ip: "{{ ansible_host }}"
+    registry_base_dir: /opt/docker-registry
+    registry_auth_dir: "{{ registry_base_dir }}/auth"
+    registry_cert_dir: "{{ registry_base_dir }}/certs"
+    registry_nginx_dir: "{{ registry_base_dir }}/nginx"
+    registry_data_dir: "{{ registry_base_dir }}/data"
+    registry_username: "{{ lookup('env', 'REGISTRY_USERNAME') }}"
+    registry_password: "{{ lookup('env', 'REGISTRY_PASSWORD') }}"
+
+  tasks:
+    - name: Require registry credentials
+      ansible.builtin.assert:
+        that:
+          - registry_username | length > 0
+          - registry_password | length > 0
+        fail_msg: REGISTRY_USERNAME and REGISTRY_PASSWORD must be set.
+      no_log: true
+
+    - name: Install Docker, OpenSSL, and htpasswd packages
+      ansible.builtin.apt:
+        name:
+          - apache2-utils
+          - ca-certificates
+          - curl
+          - docker.io
+          - docker-compose-v2
+          - openssl
+        state: present
+        update_cache: true
+
+    - name: Ensure Docker service is running
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Create registry directories
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "{{ item.mode }}"
+      loop:
+        - path: "{{ registry_base_dir }}"
+          mode: "0755"
+        - path: "{{ registry_auth_dir }}"
+          mode: "0700"
+        - path: "{{ registry_cert_dir }}"
+          mode: "0755"
+        - path: "{{ registry_nginx_dir }}"
+          mode: "0755"
+        - path: "{{ registry_data_dir }}"
+          mode: "0755"
+
+    - name: Generate self-signed SSL certificate
+      ansible.builtin.command:
+        cmd: >-
+          openssl req -x509 -nodes -days 365
+          -newkey rsa:2048
+          -keyout {{ registry_cert_dir }}/registry.key
+          -out {{ registry_cert_dir }}/registry.crt
+          -subj "/CN={{ public_ip }}"
+          -addext "subjectAltName=IP:{{ public_ip }}"
+      args:
+        creates: "{{ registry_cert_dir }}/registry.crt"
+
+    - name: Restrict SSL private key permissions
+      ansible.builtin.file:
+        path: "{{ registry_cert_dir }}/registry.key"
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Create registry htpasswd file
+      ansible.builtin.command:
+        argv:
+          - htpasswd
+          - -Bbc
+          - "{{ registry_auth_dir }}/htpasswd"
+          - "{{ registry_username }}"
+          - "{{ registry_password }}"
+      no_log: true
+      changed_when: true
+
+    - name: Restrict registry htpasswd permissions
+      ansible.builtin.file:
+        path: "{{ registry_auth_dir }}/htpasswd"
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Write Nginx reverse proxy configuration
+      ansible.builtin.template:
+        src: templates/nginx.conf.j2
+        dest: "{{ registry_nginx_dir }}/nginx.conf"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Write Docker Compose stack
+      ansible.builtin.template:
+        src: templates/docker-compose.yml.j2
+        dest: "{{ registry_base_dir }}/docker-compose.yml"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Start secure registry stack
+      ansible.builtin.command:
+        cmd: docker compose up -d --remove-orphans
+        chdir: "{{ registry_base_dir }}"
+      register: compose_up
+      changed_when: >-
+        'Creating' in (compose_up.stdout + compose_up.stderr)
+        or 'Recreating' in (compose_up.stdout + compose_up.stderr)
+        or 'Starting' in (compose_up.stdout + compose_up.stderr)
+        or 'Pulling' in (compose_up.stdout + compose_up.stderr)
+        or 'Started' in (compose_up.stdout + compose_up.stderr)
+
+    - name: Show deployed registry endpoints
+      ansible.builtin.debug:
+        msg:
+          - "Docker registry API: https://{{ public_ip }}:443/v2/"
+          - "Docker registry UI: https://{{ public_ip }}/"

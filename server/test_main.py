@@ -194,7 +194,7 @@ def test_private_user_requires_admin_credentials():
     with client_with(connection) as client:
         response = client.get(
             "/admin/users/4",
-            auth=("loise.fenoll@ynov.com", "wrong-password"),
+            auth=("admin@example.test", "wrong-password"),
         )
 
     assert response.status_code == 401
@@ -207,7 +207,7 @@ def test_private_user_returns_full_details_for_admin():
     with client_with(connection) as client:
         response = client.get(
             "/admin/users/4",
-            auth=("loise.fenoll@ynov.com", "PvdrTAzTeR247sDnAZBr"),
+            auth=("admin@example.test", "local-dev-admin-password"),
         )
 
     assert response.status_code == 200
@@ -230,7 +230,7 @@ def test_private_user_returns_not_found_for_missing_user():
     with client_with(connection) as client:
         response = client.get(
             "/admin/users/404",
-            auth=("loise.fenoll@ynov.com", "PvdrTAzTeR247sDnAZBr"),
+            auth=("admin@example.test", "local-dev-admin-password"),
         )
 
     assert response.status_code == 404
@@ -243,7 +243,7 @@ def test_delete_user_removes_registration_for_admin():
     with client_with(connection) as client:
         response = client.delete(
             "/admin/users/4",
-            auth=("loise.fenoll@ynov.com", "PvdrTAzTeR247sDnAZBr"),
+            auth=("admin@example.test", "local-dev-admin-password"),
         )
 
     assert response.status_code == 204
@@ -258,7 +258,7 @@ def test_delete_user_returns_not_found_for_missing_registration():
     with client_with(connection) as client:
         response = client.delete(
             "/admin/users/404",
-            auth=("loise.fenoll@ynov.com", "PvdrTAzTeR247sDnAZBr"),
+            auth=("admin@example.test", "local-dev-admin-password"),
         )
 
     assert response.status_code == 404

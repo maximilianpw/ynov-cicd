@@ -23,23 +23,24 @@ Au premier demarrage MySQL, les migrations creent la base, les tables
 `utilisateur` et `admin`, puis inserent l'administrateur depuis les variables
 d'environnement.
 
-Identifiants admin par defaut :
+Identifiants admin de developpement utilises par les scripts de test :
 
-- email : `loise.fenoll@ynov.com`
-- mot de passe : `PvdrTAzTeR247sDnAZBr`
+- email : `admin@example.test`
+- mot de passe : `local-dev-admin-password`
 
 ## Variables d'environnement
 
-Docker local fournit des valeurs par defaut, mais elles peuvent etre surchargees :
+Docker local attend ces variables. Les valeurs ci-dessous sont uniquement des
+exemples de developpement :
 
 ```bash
-MYSQL_ROOT_PASSWORD=passwd
+MYSQL_ROOT_PASSWORD=local-dev-root-password
 MYSQL_DATABASE=ynov-cicd
 MYSQL_USER=root
 MYSQL_HOST=db
 MYSQL_PORT=3306
-ADMIN_EMAIL=loise.fenoll@ynov.com
-ADMIN_PASSWORD=PvdrTAzTeR247sDnAZBr
+ADMIN_EMAIL=admin@example.test
+ADMIN_PASSWORD=local-dev-admin-password
 VITE_API_URL=http://localhost:8000
 CORS_ORIGINS=*
 REACT_PORT=3000
@@ -47,19 +48,14 @@ REACT_PORT=3000
 
 Production :
 
-- Cote Vercel backend avec Aiven MySQL :
-  - `MYSQL_HOST=mysql-298328f0-proton-1e70.j.aivencloud.com`
-  - `MYSQL_PORT=22462`
-  - `MYSQL_DATABASE=defaultdb`
-  - `MYSQL_USER=avnadmin`
-  - `MYSQL_PASSWORD` doit contenir le mot de passe Aiven.
-- Cote Vercel backend : `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CORS_ORIGINS`.
-- Cote GitHub Actions : `VITE_API_URL` doit pointer vers l'API Vercel.
-- Deploiement Vercel : `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
-- Optionnel : `CODECOV_TOKEN`.
-
-La base MySQL de production doit etre creee sur Aiven ou Alwaysdata, avec le
-schema equivalent aux migrations de `migrations/`.
+- Le deploiement final AWS est documente dans `ARCHITECTURE.md`.
+- Le workflow manuel `.github/workflows/deploy.yml` construit les images,
+  les pousse sur le registry prive, provisionne l'EC2 applicative avec
+  Terraform, puis lance Ansible.
+- Les secrets requis sont listes dans `.env.sample`.
+- Le frontend de production est construit avec `VITE_API_URL=/api`; Nginx
+  route ensuite `/api/*` vers le backend Docker.
+- Optionnel : `CODECOV_TOKEN` pour l'envoi de couverture.
 
 ## Fonctionnalites
 
@@ -142,6 +138,9 @@ Le workflow GitHub Actions :
 - lance les tests unitaires et d'integration frontend avec couverture ;
 - lance les tests backend FastAPI ;
 - demarre l'environnement Docker et lance les tests d'infrastructure ;
-- lance Cypress contre Docker ;
-- deploie le front vers GitHub Pages ;
-- deploie le backend vers Vercel.
+- lance Cypress contre Docker.
+
+Le deploiement final du projet se lance manuellement avec
+`.github/workflows/deploy.yml`. Il construit et pousse les images Docker sur le
+registry prive, cree l'infrastructure AWS applicative, execute Ansible, puis
+valide le front et le backend avec `curl`.

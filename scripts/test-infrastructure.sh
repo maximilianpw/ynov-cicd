@@ -1,10 +1,16 @@
 #!/bin/sh
 set -eu
 
-root_password="${MYSQL_ROOT_PASSWORD:-passwd}"
-database="${MYSQL_DATABASE:-ynov-cicd}"
-admin_email="${ADMIN_EMAIL:-loise.fenoll@ynov.com}"
-react_port="${REACT_PORT:-3000}"
+export MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-local-dev-root-password}"
+export MYSQL_DATABASE="${MYSQL_DATABASE:-ynov-cicd}"
+export ADMIN_EMAIL="${ADMIN_EMAIL:-admin@example.test}"
+export ADMIN_PASSWORD="${ADMIN_PASSWORD:-local-dev-admin-password}"
+export REACT_PORT="${REACT_PORT:-3100}"
+
+root_password="${MYSQL_ROOT_PASSWORD}"
+database="${MYSQL_DATABASE}"
+admin_email="${ADMIN_EMAIL}"
+react_port="${REACT_PORT}"
 
 cleanup() {
   docker compose down -v

@@ -1,4 +1,5 @@
 node_modules
+.pnpm-store/
 .DS_Store
 dist
 dist-ssr
@@ -14,6 +15,12 @@ todos.json
 coverage
 docs
 
+# Terraform local state and generated secrets
+.terraform/
+*.tfstate
+*.tfstate.*
+*.pem
+
 # Python/backend artifacts
 __pycache__/
 *.py[cod]
@@ -24,3 +31,9 @@ __pycache__/
 venv/
 .vercel
 .env*
+!.env.sample
+
+# Generated deployment bridge files
+inventory.ini
+key.pem
+infrastructure/**/ansible/inventory.ini
