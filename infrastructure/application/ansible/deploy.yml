@@ -37,6 +37,43 @@
         state: started
         enabled: true
 
+    - name: Check configured swap devices
+      ansible.builtin.command:
+        cmd: swapon --show=NAME --noheadings
+      register: swap_devices
+      changed_when: false
+
+    - name: Create swap file for Docker workloads
+      ansible.builtin.command:
+        cmd: fallocate -l 2G /swapfile
+        creates: /swapfile
+
+    - name: Restrict swap file permissions
+      ansible.builtin.file:
+        path: /swapfile
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Initialize swap file
+      ansible.builtin.command:
+        cmd: mkswap /swapfile
+      when: "'/swapfile' not in swap_devices.stdout_lines"
+      changed_when: true
+
+    - name: Enable swap file
+      ansible.builtin.command:
+        cmd: swapon /swapfile
+      when: "'/swapfile' not in swap_devices.stdout_lines"
+      changed_when: true
+
+    - name: Persist swap file
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '^/swapfile\s+'
+        line: /swapfile none swap sw 0 0
+        state: present
+
     - name: Create application directories
       ansible.builtin.file:
         path: "{{ item.path }}"
