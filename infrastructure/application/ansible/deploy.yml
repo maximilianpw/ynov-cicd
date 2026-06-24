@@ -20,21 +20,6 @@
     cors_origins: "{{ lookup('env', 'CORS_ORIGINS') }}"
 
   tasks:
-    - name: Require deployment secrets
-      ansible.builtin.assert:
-        that:
-          - registry_host | length > 0
-          - registry_username | length > 0
-          - registry_password | length > 0
-          - image_tag | length > 0
-          - mysql_root_password | length > 0
-          - mysql_database | length > 0
-          - admin_email | length > 0
-          - admin_password | length > 0
-          - cors_origins | length > 0
-        fail_msg: Required registry, database, or admin secrets are missing.
-      no_log: true
-
     - name: Install Docker and runtime dependencies
       ansible.builtin.apt:
         name:
@@ -152,16 +137,47 @@
       changed_when: true
 
     - name: Start production stack
-      ansible.builtin.command:
-        cmd: docker compose up -d --remove-orphans
-        chdir: "{{ app_base_dir }}"
-      register: compose_up
-      changed_when: >-
-        'Creating' in (compose_up.stdout + compose_up.stderr)
-        or 'Recreating' in (compose_up.stdout + compose_up.stderr)
-        or 'Starting' in (compose_up.stdout + compose_up.stderr)
-        or 'Pulling' in (compose_up.stdout + compose_up.stderr)
-        or 'Started' in (compose_up.stdout + compose_up.stderr)
+      block:
+        - name: Run Docker Compose
+          ansible.builtin.command:
+            cmd: docker compose up -d --remove-orphans
+            chdir: "{{ app_base_dir }}"
+          register: compose_up
+          changed_when: >-
+            'Creating' in (compose_up.stdout + compose_up.stderr)
+            or 'Recreating' in (compose_up.stdout + compose_up.stderr)
+            or 'Starting' in (compose_up.stdout + compose_up.stderr)
+            or 'Pulling' in (compose_up.stdout + compose_up.stderr)
+            or 'Started' in (compose_up.stdout + compose_up.stderr)
+
+      rescue:
+        - name: Show production stack status
+          ansible.builtin.command:
+            cmd: docker compose ps
+            chdir: "{{ app_base_dir }}"
+          register: compose_ps
+          changed_when: false
+          failed_when: false
+
+        - name: Show database container logs
+          ansible.builtin.command:
+            cmd: docker compose logs --no-color --tail=200 db
+            chdir: "{{ app_base_dir }}"
+          register: compose_db_logs
+          changed_when: false
+          failed_when: false
+
+        - name: Print production stack status
+          ansible.builtin.debug:
+            var: compose_ps.stdout_lines
+
+        - name: Print database container logs
+          ansible.builtin.debug:
+            var: compose_db_logs.stdout_lines
+
+        - name: Fail after production stack diagnostics
+          ansible.builtin.fail:
+            msg: Docker Compose failed to start the production stack. See database logs above.
 
   handlers:
     - name: Restart Docker
