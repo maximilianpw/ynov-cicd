@@ -1,14 +1,17 @@
 Lien du repository GitHub public :
 https://github.com/maximilianpw/ynov-cicd
 
-Lien du projet déployé sur GitHub Pages :
-https://maximilianpw.github.io/ynov-cicd
+Adresse IP publique du projet AWS :
+<a renseigner apres execution manuelle de .github/workflows/deploy.yml>
 
-Lien de l'API backend déployée sur Vercel :
-https://ynov-cicd.vercel.app
+URL du projet AWS :
+http://<ip-projet>/ynov-cicd/
 
-Hébergement MySQL de production :
-Aiven MySQL : mysql-298328f0-proton-1e70.j.aivencloud.com:22462/defaultdb
+Adresse IP publique du registry Docker AWS :
+15.224.115.67
 
-Lien vers le rapport de couverture Codecov public :
-https://codecov.io/gh/maximilianpw/ynov-cicd
+URL du registry Docker AWS :
+https://15.224.115.67/
+
+Workflow de deploiement manuel :
+.github/workflows/deploy.yml

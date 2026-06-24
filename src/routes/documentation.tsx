@@ -57,8 +57,8 @@ export function Documentation() {
       <p>
         L'administrateur est insere au premier demarrage MySQL depuis les
         variables <code>ADMIN_EMAIL</code> et <code>ADMIN_PASSWORD</code>. Les
-        valeurs locales par defaut sont <code>loise.fenoll@ynov.com</code> et{' '}
-        <code>PvdrTAzTeR247sDnAZBr</code>.
+        scripts de test utilisent <code>admin@example.test</code> et{' '}
+        <code>local-dev-admin-password</code>.
       </p>
 
       <h2>API</h2>
@@ -96,8 +96,9 @@ export function Documentation() {
       <p>
         GitHub Actions construit le front, lance les tests frontend avec
         couverture, lance les tests backend, demarre Docker pour les tests
-        d'infrastructure, lance Cypress, deploie le front sur GitHub Pages et
-        deploie l'API sur Vercel.
+        d'infrastructure et lance Cypress. Le deploiement final AWS se lance
+        manuellement, pousse les images sur le registry prive, cree l'EC2
+        applicative avec Terraform, execute Ansible et valide le front et l'API.
       </p>
     </main>
   )

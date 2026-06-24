@@ -52,9 +52,7 @@ def mysql_config() -> dict[str, Any]:
     return {
         "database": os.getenv("MYSQL_DATABASE", "ynov-cicd"),
         "user": os.getenv("MYSQL_USER", "root"),
-        "password": os.getenv(
-            "MYSQL_PASSWORD", os.getenv("MYSQL_ROOT_PASSWORD", "passwd")
-        ),
+        "password": os.getenv("MYSQL_PASSWORD", os.getenv("MYSQL_ROOT_PASSWORD", "")),
         "host": os.getenv("MYSQL_HOST", "127.0.0.1"),
         "port": int(os.getenv("MYSQL_PORT", "3306")),
     }

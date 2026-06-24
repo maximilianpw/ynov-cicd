@@ -1,0 +1,170 @@
+---
+- name: Deploy Ynov CICD application stack
+  hosts: app
+  become: true
+  gather_facts: true
+
+  vars:
+    app_base_dir: /opt/ynov-cicd
+    app_migrations_dir: "{{ app_base_dir }}/migrations"
+    registry_host: "{{ lookup('env', 'REGISTRY_HOST') | regex_replace('^https?://', '') | regex_replace('/$', '') }}"
+    registry_username: "{{ lookup('env', 'REGISTRY_USERNAME') }}"
+    registry_password: "{{ lookup('env', 'REGISTRY_PASSWORD') }}"
+    image_tag: "{{ lookup('env', 'IMAGE_TAG') }}"
+    backend_image: "{{ registry_host }}/ynov-cicd-backend:{{ image_tag }}"
+    frontend_image: "{{ registry_host }}/ynov-cicd-frontend:{{ image_tag }}"
+    mysql_root_password: "{{ lookup('env', 'MYSQL_ROOT_PASSWORD') }}"
+    mysql_database: "{{ lookup('env', 'MYSQL_DATABASE') }}"
+    admin_email: "{{ lookup('env', 'ADMIN_EMAIL') }}"
+    admin_password: "{{ lookup('env', 'ADMIN_PASSWORD') }}"
+    cors_origins: "{{ lookup('env', 'CORS_ORIGINS') }}"
+
+  tasks:
+    - name: Require deployment secrets
+      ansible.builtin.assert:
+        that:
+          - registry_host | length > 0
+          - registry_username | length > 0
+          - registry_password | length > 0
+          - image_tag | length > 0
+          - mysql_root_password | length > 0
+          - mysql_database | length > 0
+          - admin_email | length > 0
+          - admin_password | length > 0
+          - cors_origins | length > 0
+        fail_msg: Required registry, database, or admin secrets are missing.
+      no_log: true
+
+    - name: Install Docker and runtime dependencies
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - docker.io
+          - docker-compose-v2
+          - openssl
+        state: present
+        update_cache: true
+
+    - name: Ensure Docker service is running
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Create application directories
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "{{ item.mode }}"
+      loop:
+        - path: "{{ app_base_dir }}"
+          mode: "0755"
+        - path: "{{ app_migrations_dir }}"
+          mode: "0755"
+
+    - name: Trust private registry certificate for system tools
+      ansible.builtin.shell:
+        cmd: >-
+          set -o pipefail &&
+          echo |
+          openssl s_client
+          -showcerts
+          -connect {{ registry_host }}:443
+          -servername {{ registry_host }}
+          2>/dev/null |
+          awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/'
+          > /usr/local/share/ca-certificates/private-registry.crt
+        executable: /bin/bash
+      register: registry_cert_fetch
+      changed_when: registry_cert_fetch.rc == 0
+
+    - name: Update system CA trust
+      ansible.builtin.command:
+        cmd: update-ca-certificates
+      changed_when: true
+
+    - name: Create Docker registry certificate directories
+      ansible.builtin.file:
+        path: "/etc/docker/certs.d/{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      loop:
+        - "{{ registry_host }}"
+        - "{{ registry_host }}:443"
+
+    - name: Trust private registry certificate for Docker
+      ansible.builtin.copy:
+        src: /usr/local/share/ca-certificates/private-registry.crt
+        dest: "/etc/docker/certs.d/{{ item }}/ca.crt"
+        owner: root
+        group: root
+        mode: "0644"
+        remote_src: true
+      loop:
+        - "{{ registry_host }}"
+        - "{{ registry_host }}:443"
+      notify: Restart Docker
+
+    - name: Flush Docker restart before registry login
+      ansible.builtin.meta: flush_handlers
+
+    - name: Log in to private Docker registry
+      ansible.builtin.command:
+        cmd: docker login {{ registry_host }} --username {{ registry_username }} --password-stdin
+        stdin: "{{ registry_password }}"
+      no_log: true
+      changed_when: true
+
+    - name: Copy database migrations
+      ansible.builtin.copy:
+        src: ../../../migrations/
+        dest: "{{ app_migrations_dir }}/"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Write production environment file
+      ansible.builtin.template:
+        src: templates/app.env.j2
+        dest: "{{ app_base_dir }}/.env"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+
+    - name: Write production Docker Compose stack
+      ansible.builtin.template:
+        src: templates/docker-compose.prod.yml.j2
+        dest: "{{ app_base_dir }}/docker-compose.yml"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Pull production images
+      ansible.builtin.command:
+        cmd: docker compose pull
+        chdir: "{{ app_base_dir }}"
+      changed_when: true
+
+    - name: Start production stack
+      ansible.builtin.command:
+        cmd: docker compose up -d --remove-orphans
+        chdir: "{{ app_base_dir }}"
+      register: compose_up
+      changed_when: >-
+        'Creating' in (compose_up.stdout + compose_up.stderr)
+        or 'Recreating' in (compose_up.stdout + compose_up.stderr)
+        or 'Starting' in (compose_up.stdout + compose_up.stderr)
+        or 'Pulling' in (compose_up.stdout + compose_up.stderr)
+        or 'Started' in (compose_up.stdout + compose_up.stderr)
+
+  handlers:
+    - name: Restart Docker
+      ansible.builtin.service:
+        name: docker
+        state: restarted

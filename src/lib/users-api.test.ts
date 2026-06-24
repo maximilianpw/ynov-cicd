@@ -33,8 +33,8 @@ const registration: IRegistrationForm = {
 }
 
 const adminCredentials: AdminCredentials = {
-  email: 'loise.fenoll@ynov.com',
-  password: 'PvdrTAzTeR247sDnAZBr',
+  email: 'admin@example.test',
+  password: 'local-dev-admin-password',
 }
 
 const adminHeaders = {
