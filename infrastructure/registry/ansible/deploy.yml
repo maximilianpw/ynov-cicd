@@ -23,10 +23,9 @@
         fail_msg: REGISTRY_USERNAME and REGISTRY_PASSWORD must be set.
       no_log: true
 
-    - name: Install Docker, OpenSSL, and htpasswd packages
+    - name: Install Docker and OpenSSL packages
       ansible.builtin.apt:
         name:
-          - apache2-utils
           - ca-certificates
           - curl
           - docker.io
@@ -52,7 +51,7 @@
         - path: "{{ registry_base_dir }}"
           mode: "0755"
         - path: "{{ registry_auth_dir }}"
-          mode: "0700"
+          mode: "0755"
         - path: "{{ registry_cert_dir }}"
           mode: "0755"
         - path: "{{ registry_nginx_dir }}"
@@ -79,23 +78,23 @@
         group: root
         mode: "0600"
 
-    - name: Create registry htpasswd file
+    - name: Generate Nginx-compatible registry password hash
       ansible.builtin.command:
-        argv:
-          - htpasswd
-          - -Bbc
-          - "{{ registry_auth_dir }}/htpasswd"
-          - "{{ registry_username }}"
-          - "{{ registry_password }}"
+        cmd: openssl passwd -apr1 -stdin
+        stdin: "{{ registry_password }}"
+        stdin_add_newline: false
+      register: registry_password_hash
       no_log: true
-      changed_when: true
+      changed_when: false
 
-    - name: Restrict registry htpasswd permissions
-      ansible.builtin.file:
-        path: "{{ registry_auth_dir }}/htpasswd"
+    - name: Write registry htpasswd file
+      ansible.builtin.copy:
+        content: "{{ registry_username }}:{{ registry_password_hash.stdout }}\n"
+        dest: "{{ registry_auth_dir }}/htpasswd"
         owner: root
         group: root
-        mode: "0600"
+        mode: "0644"
+      no_log: true
 
     - name: Write Nginx reverse proxy configuration
       ansible.builtin.template:
