@@ -150,6 +150,21 @@
         group: root
         mode: "0644"
 
+    - name: Find database shell migrations
+      ansible.builtin.find:
+        paths: "{{ app_migrations_dir }}"
+        patterns: "*.sh"
+        file_type: file
+      register: migration_shell_scripts
+
+    - name: Make database shell migrations executable
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        owner: root
+        group: root
+        mode: "0755"
+      loop: "{{ migration_shell_scripts.files }}"
+
     - name: Write production environment file
       ansible.builtin.template:
         src: templates/app.env.j2
